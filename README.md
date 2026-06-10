@@ -1,3 +1,2 @@
-# Projeto-IP
-- Código do jogo
+# Projeto-IP: Find AI at CIN
 
