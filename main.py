@@ -4,9 +4,9 @@ from personagens import inimigo
 
 pygame.init()
 
-fonte = pygame.font.Font("Projeto-IP/fontes/PixelOperator8-Bold.ttf", 45)
-fonte2 = pygame.font.Font("Projeto-IP/fontes/PixelOperator8.ttf", 28)
-fonte3 = pygame.font.Font("Projeto-IP/fontes/PressStart2P-Regular.ttf", 15)
+fonte = pygame.font.Font("fontes/PixelOperator8-Bold.ttf", 45)
+fonte2 = pygame.font.Font("fontes/PixelOperator8.ttf", 28)
+fonte3 = pygame.font.Font("fontes/PressStart2P-Regular.ttf", 15)
 
 #configurando a tela
 altura, largura = 750, 1200
