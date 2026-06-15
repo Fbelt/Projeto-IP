@@ -1,6 +1,7 @@
 import pygame
 from personagens import jogador
 from personagens import inimigo
+from batalha import verificar_colisao
 
 pygame.init()
 
@@ -19,13 +20,14 @@ while True:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit();  break
-    
+
     teclas = pygame.key.get_pressed()
     jogador.mover(teclas, largura, altura)
-    
+    verificar_colisao(jogador, inimigo)
+
     tela.fill((30, 10, 30))
     jogador.desenhar(tela)
     inimigo.desenhar(tela)
 
     pygame.display.flip()
-    clock.tick(45) 
+    clock.tick(45)
