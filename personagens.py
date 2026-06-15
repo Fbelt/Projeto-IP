@@ -1,15 +1,34 @@
 import pygame
-class personagem:
-    def __init__(self, nome):
-        self.nome = nome
-    def falar(self, frase):
-        print(f"{self.nome} diz: {frase}")
-class heroi(personagem):
-    def __init__(self, nome, poder):
-        super().__init__(nome)
-        self.poder = poder
-    def usar_poder(self):
-        print(f"{self.nome} usa seu poder: {self.poder}")
+class jogador:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.velocidade = 5
+        self.largura = 50
+        self.altura = 50
+        self.cor = ( 0, 255, 0)
 
-mario = heroi("Mario", "Super Força")
-mario.falar("Vamos salvar a princesa!")
+    def mover(self, teclas, limite_x, limite_y):
+        if teclas[pygame.K_LEFT]:  self.x -= self.velocidade
+        if teclas[pygame.K_RIGHT]: self.x += self.velocidade
+        if teclas[pygame.K_UP]:    self.y -= self.velocidade
+        if teclas[pygame.K_DOWN]:  self.y += self.velocidade
+
+        #limite do mapa
+        self.x = max(0, min(self.x, limite_x - self.largura))
+        self.y = max(0, min(self.y, limite_y - self.altura))
+
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
+
+class inimigo:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.velocidade = 20
+        self.largura = 75
+        self.altura = 75
+        self.cor = (255, 0, 0)
+    
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
