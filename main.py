@@ -5,29 +5,54 @@ from batalha import verificar_colisao
 
 pygame.init()
 
+fonte = pygame.font.Font("fontes/PixelOperator8-Bold.ttf", 45)
+fonte2 = pygame.font.Font("fontes/PixelOperator8.ttf", 28)
+fonte3 = pygame.font.Font("fontes/PressStart2P-Regular.ttf", 15)
+
 #configurando a tela
 altura, largura = 750, 1200
 tela = pygame.display.set_mode((largura, altura))
 pygame.display.set_caption("Find AI at CIN")
 clock = pygame.time.Clock()
+tela_de_inicio = True
 
 #onde vai nascer os personagens
 jogador = jogador(x=15, y=15)
 inimigo = inimigo(x=400, y=400)
 
 #loop do jogo
-while True:
+rodando = True
+while rodando:
+
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
-            pygame.quit();  break
+            pygame.quit()
+            rodando = False
+            break
 
-    teclas = pygame.key.get_pressed()
-    jogador.mover(teclas, largura, altura)
-    verificar_colisao(jogador, inimigo)
+    if not rodando:
+        break
 
-    tela.fill((30, 10, 30))
-    jogador.desenhar(tela)
-    inimigo.desenhar(tela)
+    if tela_de_inicio:
+        tela.fill((0, 0, 0))
+        texto = fonte.render("Find AI at CIN", True, (255, 255, 255))
+        texto2 = fonte2.render("Encontre a IA escondida no CIN!", True, (255, 255, 255))
+        texto3 = fonte3.render("Pressione ESPACO para comecar", True, (255, 255, 255))
+        tela.blit(texto, (largura // 2 - texto.get_width() // 2, 125))
+        tela.blit(texto2, (largura // 2 - texto2.get_width() // 2, 200))
+        tela.blit(texto3, (largura // 2 - texto3.get_width() // 2, 500))
+        pygame.display.flip()
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            tela_de_inicio = False
 
-    pygame.display.flip()
-    clock.tick(45)
+    else:
+        teclas = pygame.key.get_pressed()
+        jogador.mover(teclas, largura, altura)
+        verificar_colisao(jogador, inimigo)
+
+        tela.fill((0, 0, 0))
+        jogador.desenhar(tela)
+        inimigo.desenhar(tela)
+
+        pygame.display.flip()
+        clock.tick(45)
