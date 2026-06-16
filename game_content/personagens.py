@@ -4,8 +4,8 @@ class jogador:
         self.x = x
         self.y = y
         self.velocidade = 5
-        self.largura = 20
-        self.altura = 40
+        self.largura = 25
+        self.altura = 25
         self.cor = ( 0, 255, 0)
 
     def mover(self, teclas, limite_x, limite_y):
