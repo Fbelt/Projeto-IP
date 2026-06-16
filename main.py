@@ -1,7 +1,7 @@
 import pygame
-from personagens import jogador
-from personagens import inimigo
-from batalha import verificar_colisao
+from game_content.personagens import jogador
+from game_content.personagens import inimigo
+from game_content.batalha import verificar_colisao
 
 pygame.init()
 
