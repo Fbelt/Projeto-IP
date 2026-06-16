@@ -16,6 +16,9 @@ pygame.display.set_caption("Find AI at CIN")
 clock = pygame.time.Clock()
 tela_de_inicio = True
 
+fundo_inicio = pygame.image.load("imagens/cin_fnaf_final5 (1).png")
+fundo_inicio = pygame.transform.scale(fundo_inicio, (largura, altura))
+
 #onde vai nascer os personagens
 jogador = jogador(x=15, y=15)
 inimigo = inimigo(x=400, y=400)
@@ -34,7 +37,7 @@ while rodando:
         break
 
     if tela_de_inicio:
-        tela.fill((0, 0, 0))
+        tela.blit(fundo_inicio, (0, 0))
         texto = fonte.render("Find AI at CIN", True, (255, 255, 255))
         texto2 = fonte2.render("Encontre a IA escondida no CIN!", True, (255, 255, 255))
         texto3 = fonte3.render("Pressione ESPACO para comecar", True, (255, 255, 255))
