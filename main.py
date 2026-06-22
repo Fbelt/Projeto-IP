@@ -1,7 +1,11 @@
 import pygame
-from game_content.personagens import jogador
-from game_content.personagens import inimigo
+
+from game_content.personagens import jogador as Jogador
+from game_content.personagens import inimigo as Inimigo
 from game_content.batalha import verificar_colisao
+
+from game_content.mapa import (mapas,desenhar_mapa,encontrar_posicao_inicial,jogador_colide_com_mapa,jogador_esta_na_escada,)
+
 
 pygame.init()
 
@@ -9,7 +13,7 @@ fonte = pygame.font.Font("fontes/PixelOperator8-Bold.ttf", 45)
 fonte2 = pygame.font.Font("fontes/PixelOperator8.ttf", 28)
 fonte3 = pygame.font.Font("fontes/PressStart2P-Regular.ttf", 15)
 
-#configurando a tela
+# configurando a tela
 altura, largura = 750, 1200
 tela = pygame.display.set_mode((largura, altura))
 pygame.display.set_caption("Find AI at CIN")
@@ -19,11 +23,17 @@ tela_de_inicio = True
 fundo_inicio = pygame.image.load("imagens/cin_fnaf_final5 (1).png")
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura, altura))
 
-#onde vai nascer os personagens
-jogador = jogador(x=15, y=15)
-inimigo = inimigo(x=400, y=400)
+andar_atual = 0
+mapa_atual = mapas[andar_atual]
 
-#loop do jogo
+# onde vai nascer o jogador
+jogador = Jogador(x=15, y=15)
+jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+
+# inimigo
+inimigo = Inimigo(x=400, y=400)
+
+# loop do jogo
 rodando = True
 while rodando:
 
@@ -38,22 +48,43 @@ while rodando:
 
     if tela_de_inicio:
         tela.blit(fundo_inicio, (0, 0))
+
         texto = fonte.render("Find AI at CIN", True, (255, 255, 255))
         texto2 = fonte2.render("Encontre a IA escondida no CIN!", True, (255, 255, 255))
         texto3 = fonte3.render("Pressione ESPACO para comecar", True, (255, 255, 255))
+
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, 125))
         tela.blit(texto2, (largura // 2 - texto2.get_width() // 2, 200))
         tela.blit(texto3, (largura // 2 - texto3.get_width() // 2, 500))
+
         pygame.display.flip()
+
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             tela_de_inicio = False
 
     else:
         teclas = pygame.key.get_pressed()
-        jogador.mover(teclas, largura, altura)
+
+        jogador.mover(
+            teclas,
+            largura,
+            altura,
+            mapa_atual,
+            jogador_colide_com_mapa
+        )
+
         verificar_colisao(jogador, inimigo)
 
+        if jogador_esta_na_escada(mapa_atual, jogador):
+            if andar_atual < len(mapas) - 1:
+                andar_atual += 1
+                mapa_atual = mapas[andar_atual]
+                jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+
         tela.fill((0, 0, 0))
+
+        desenhar_mapa(tela, mapa_atual)
+
         jogador.desenhar(tela)
         inimigo.desenhar(tela)
 
