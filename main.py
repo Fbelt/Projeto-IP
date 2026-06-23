@@ -2,9 +2,10 @@ import pygame
 
 from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
+from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
 
-from game_content.mapa import (mapas,desenhar_mapa,encontrar_posicao_inicial,jogador_colide_com_mapa,jogador_esta_na_escada,)
+from game_content.mapa import mapas,desenhar_mapa,encontrar_posicao_inicial,encontrar_posicao_spawn_descida,jogador_colide_com_mapa,jogador_esta_na_escada_subida,jogador_esta_na_escada_descida
 
 
 pygame.init()
@@ -32,6 +33,12 @@ jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
 
 # inimigo
 inimigo = Inimigo(x=400, y=400)
+
+# cooldown para evitar trocar de andar várias vezes seguidas
+tempo_ultima_escada = 0
+COOLDOWN_ESCADA = 500
+
+tempo_inicio_visao = 0
 
 # loop do jogo
 rodando = True
@@ -61,6 +68,7 @@ while rodando:
 
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             tela_de_inicio = False
+            tempo_inicio_visao = pygame.time.get_ticks()
 
     else:
         teclas = pygame.key.get_pressed()
@@ -75,18 +83,43 @@ while rodando:
 
         verificar_colisao(jogador, inimigo)
 
-        if jogador_esta_na_escada(mapa_atual, jogador):
-            if andar_atual < len(mapas) - 1:
-                andar_atual += 1
-                mapa_atual = mapas[andar_atual]
-                jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+        tempo_atual = pygame.time.get_ticks()
+
+        if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
+
+            # sobe para o próximo andar usando S
+            if jogador_esta_na_escada_subida(mapa_atual, jogador):
+                if andar_atual < len(mapas) - 1:
+                    andar_atual += 1
+                    mapa_atual = mapas[andar_atual]
+
+                    # ao subir, nasce no P do novo andar
+                    jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+
+                    tempo_ultima_escada = tempo_atual
+                    tempo_inicio_visao = pygame.time.get_ticks()
+
+            # desce para o andar anterior usando B
+            elif jogador_esta_na_escada_descida(mapa_atual, jogador):
+                if andar_atual > 0:
+                    andar_atual -= 1
+                    mapa_atual = mapas[andar_atual]
+
+                    # ao descer, nasce no p do andar anterior
+                    jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+
+                    tempo_ultima_escada = tempo_atual
+                    tempo_inicio_visao = pygame.time.get_ticks()
 
         tela.fill((0, 0, 0))
 
         desenhar_mapa(tela, mapa_atual)
 
-        jogador.desenhar(tela)
         inimigo.desenhar(tela)
+
+        aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
+
+        jogador.desenhar(tela)
 
         pygame.display.flip()
         clock.tick(45)
