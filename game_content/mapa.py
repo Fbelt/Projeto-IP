@@ -1,4 +1,5 @@
 import pygame
+import os
 
 TAMANHO_TILE = 25
 
@@ -8,6 +9,25 @@ COR_PORTA = (35, 175, 75)
 COR_ESCADA = (130, 130, 130)
 COR_TEXTO_ESCADA = (0, 170, 60)
 
+TEXTURAS = None  # cache global, carregado só na primeira chamada de desenhar_mapa
+ 
+ 
+def carregar_textura(nome_arquivo):
+    caminho = f"imagens/{nome_arquivo}"
+    imagem = pygame.image.load(caminho).convert_alpha()
+    return pygame.transform.scale(imagem, (TAMANHO_TILE, TAMANHO_TILE))
+ 
+ 
+def carregar_texturas():
+    global TEXTURAS
+    if TEXTURAS is None:
+        TEXTURAS = {
+            "#": carregar_textura("parede.png"),
+            ".": carregar_textura("chao.png"),
+            "D": carregar_textura("porta.png"),
+            "S": carregar_textura("escada_subida.png"),
+            "B": carregar_textura("escada_descida.png"),
+        }
 
 MAPA_ANDAR_1 = [
     "P.............................#..#SSS....#..#...",
@@ -115,6 +135,7 @@ mapas = [MAPA_ANDAR_1, MAPA_ANDAR_2, MAPA_ANDAR_3]
 
 
 def desenhar_mapa(tela, mapa):
+    carregar_texturas()
     fonte_escada = pygame.font.SysFont(None, 20)
 
     for linha_indice, linha in enumerate(mapa):
@@ -125,29 +146,19 @@ def desenhar_mapa(tela, mapa):
             retangulo = pygame.Rect(x, y, TAMANHO_TILE, TAMANHO_TILE)
 
             if bloco == "#":
-                pygame.draw.rect(tela, COR_PAREDE, retangulo)
+                tela.blit(TEXTURAS["#"], retangulo)
 
             elif bloco == "." or bloco == "P" or bloco == "p":
-                pygame.draw.rect(tela, COR_CHAO, retangulo)
+                tela.blit(TEXTURAS["."], retangulo)
 
             elif bloco == "D":
-                pygame.draw.rect(tela, COR_PORTA, retangulo)
+                tela.blit(TEXTURAS["D"], retangulo)
 
             elif bloco == "S":
-                pygame.draw.rect(tela, COR_ESCADA, retangulo)
-                texto = fonte_escada.render("S", True, COR_TEXTO_ESCADA)
-                tela.blit(texto,(x + TAMANHO_TILE // 2 - texto.get_width() // 2,y + TAMANHO_TILE // 2 - texto.get_height() // 2))
-
+                tela.blit(TEXTURAS["S"], retangulo)
+ 
             elif bloco == "B":
-                pygame.draw.rect(tela, COR_ESCADA, retangulo)
-                texto = fonte_escada.render("D", True, (255, 194, 14))
-                tela.blit(
-                    texto,
-                    (
-                        x + TAMANHO_TILE // 2 - texto.get_width() // 2,
-                        y + TAMANHO_TILE // 2 - texto.get_height() // 2
-                    )
-                )
+                tela.blit(TEXTURAS["B"], retangulo)
 
             pygame.draw.rect(tela, (60, 60, 60), retangulo, 1)
 
