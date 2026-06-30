@@ -4,9 +4,8 @@ from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
 from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
-
 from game_content.mapa import mapas,desenhar_mapa,encontrar_posicao_inicial,encontrar_posicao_spawn_descida,jogador_colide_com_mapa,jogador_esta_na_escada_subida,jogador_esta_na_escada_descida
-
+from game_content.sistema_vida import sistemavida
 
 pygame.init()
 
@@ -33,6 +32,9 @@ jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
 
 # inimigo
 inimigo = Inimigo(x=400, y=400)
+
+# Sistema de Vida
+sistema_vida = sistemavida()
 
 # cooldown para evitar trocar de andar várias vezes seguidas
 tempo_ultima_escada = 0
@@ -73,15 +75,17 @@ while rodando:
     else:
         teclas = pygame.key.get_pressed()
 
-        jogador.mover(
-            teclas,
-            largura,
-            altura,
-            mapa_atual,
-            jogador_colide_com_mapa
-        )
+        if sistema_vida.jogador_morto():
+            jogador.mover(
+                teclas,
+                largura,
+                altura,
+                mapa_atual,
+                jogador_colide_com_mapa
+            )
 
-        verificar_colisao(jogador, inimigo)
+        if verificar_colisao(jogador, inimigo):
+            sistema_vida.receber_dano()
 
         tempo_atual = pygame.time.get_ticks()
 
@@ -120,6 +124,7 @@ while rodando:
         aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
 
         jogador.desenhar(tela)
+        sistema_vida.desenhar(tela)
 
         pygame.display.flip()
         clock.tick(45)
