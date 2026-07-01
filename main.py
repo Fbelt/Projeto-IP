@@ -4,7 +4,7 @@ from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
 from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
-from game_content.mapa import mapas,desenhar_mapa,encontrar_posicao_inicial,encontrar_posicao_spawn_descida,encontrar_posicao_inimigo,jogador_colide_com_mapa,jogador_esta_na_escada_subida,jogador_esta_na_escada_descida
+from game_content.mapa import mapas, desenhar_mapa, encontrar_posicao_inicial, encontrar_posicao_spawn_descida, encontrar_posicao_inimigo, jogador_colide_com_mapa, jogador_esta_na_escada_subida, jogador_esta_na_escada_descida
 from game_content.sistema_vida import sistemavida
 
 pygame.init()
@@ -47,6 +47,10 @@ tempo_inicio_visao = 0
 
 jogo_ganho = False
 
+# textos da tela de game over
+texto_go = fonte.render("GAME OVER", True, (220, 30, 30))
+texto_reiniciar = fonte3.render("Pressione ESPAÇO para reiniciar", True, (255, 255, 255))
+
 # loop do jogo
 rodando = True
 while rodando:
@@ -79,21 +83,11 @@ while rodando:
 
     else:
         teclas = pygame.key.get_pressed()
-
         inimigo_atual = inimigos[andar_atual]
 
-        if sistema_vida.jogador_morto():
-            jogador.mover(
-                teclas,
-                largura,
-                altura,
-                mapa_atual,
-                jogador_colide_com_mapa
-            )
-            inimigo_atual.mover(jogador, mapa_atual, jogador_colide_com_mapa)
-
-        if verificar_colisao(jogador, inimigo_atual):
-            sistema_vida.receber_dano()
+        # --- estado: jogador morreu ---
+        if sistema_vida.fim_jogo:
+            tela.fill((0, 0, 0))
 
             tela.blit(texto_go, (largura // 2 - texto_go.get_width() // 2, altura // 2 - 80))
             tela.blit(texto_reiniciar, (largura // 2 - texto_reiniciar.get_width() // 2, altura // 2 + 20))
@@ -108,6 +102,7 @@ while rodando:
                 jogo_ganho = False
                 tempo_inicio_visao = pygame.time.get_ticks()
 
+        # --- estado: jogador ganhou ---
         elif jogo_ganho:
             tela.fill((0, 0, 0))
 
@@ -124,20 +119,21 @@ while rodando:
             if teclas[pygame.K_SPACE]:
                 rodando = False
 
+        # --- estado: jogo normal ---
         else:
-            if sistema_vida.jogador_morto():
-                jogador.mover(
-                    teclas,
-                    largura,
-                    altura,
-                    mapa_atual,
-                    jogador_colide_com_mapa
-                )
+            jogador.mover(
+                teclas,
+                largura,
+                altura,
+                mapa_atual,
+                jogador_colide_com_mapa
+            )
+            inimigo_atual.mover(jogador, mapa_atual, jogador_colide_com_mapa)
 
-            if verificar_colisao(jogador, inimigo):
+            # a própria classe sistemavida já ignora dano repetido
+            # durante a janela de invencibilidade (tempo_invencivel_pos_dano)
+            if verificar_colisao(jogador, inimigo_atual):
                 sistema_vida.receber_dano()
-
-        inimigo_atual.desenhar(tela)
 
             tempo_atual = pygame.time.get_ticks()
 
@@ -174,7 +170,7 @@ while rodando:
 
             desenhar_mapa(tela, mapa_atual)
 
-            inimigo.desenhar(tela)
+            inimigo_atual.desenhar(tela)
 
             aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
 
@@ -182,4 +178,5 @@ while rodando:
             sistema_vida.desenhar(tela)
 
             pygame.display.flip()
-            clock.tick(45)
+
+    clock.tick(45)
