@@ -6,6 +6,8 @@ from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
 from game_content.mapa import mapas, desenhar_mapa, encontrar_posicao_inicial, encontrar_posicao_spawn_descida, encontrar_posicao_inimigo, jogador_colide_com_mapa, jogador_esta_na_escada_subida, jogador_esta_na_escada_descida
 from game_content.sistema_vida import sistemavida
+from game_content import coletaveis as coletaveis_modulo
+from game_content import inventario as inventario_modulo
 
 pygame.init()
 
@@ -39,6 +41,10 @@ for mapa in mapas:
 # Sistema de Vida
 sistema_vida = sistemavida()
 
+# coletáveis e inventário
+lista_coletaveis = coletaveis_modulo.sortear_posicoes_coletaveis()
+inventario = inventario_modulo.Inventario()
+
 # cooldown para evitar trocar de andar várias vezes seguidas
 tempo_ultima_escada = 0
 COOLDOWN_ESCADA = 500
@@ -55,7 +61,9 @@ texto_reiniciar = fonte3.render("Pressione ESPAÇO para reiniciar", True, (255, 
 rodando = True
 while rodando:
 
-    for evento in pygame.event.get():
+    eventos = pygame.event.get()
+
+    for evento in eventos:
         if evento.type == pygame.QUIT:
             pygame.quit()
             rodando = False
@@ -100,6 +108,8 @@ while rodando:
                 mapa_atual = mapas[andar_atual]
                 jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
                 jogo_ganho = False
+                lista_coletaveis = coletaveis_modulo.sortear_posicoes_coletaveis()
+                inventario = inventario_modulo.Inventario()
                 tempo_inicio_visao = pygame.time.get_ticks()
 
         # --- estado: jogador ganhou ---
@@ -170,12 +180,22 @@ while rodando:
 
             desenhar_mapa(tela, mapa_atual)
 
+            for item in lista_coletaveis:
+                if item.andar == andar_atual and not item.coletado:
+                    tela.blit(item.image, item.rect)
+
             inimigo_atual.desenhar(tela)
 
             aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
 
             jogador.desenhar(tela)
             sistema_vida.desenhar(tela)
+
+            coletaveis_modulo.atualizar_coletaveis(
+                tela, jogador, lista_coletaveis, andar_atual, eventos, inventario
+            )
+
+            inventario_modulo.desenhar_hud(tela, inventario)
 
             pygame.display.flip()
 
