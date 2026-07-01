@@ -4,7 +4,7 @@ from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
 from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
-from game_content.mapa import mapas,desenhar_mapa,encontrar_posicao_inicial,encontrar_posicao_spawn_descida,jogador_colide_com_mapa,jogador_esta_na_escada_subida,jogador_esta_na_escada_descida
+from game_content.mapa import mapas,desenhar_mapa,encontrar_posicao_inicial,encontrar_posicao_spawn_descida,encontrar_posicao_inimigo,jogador_colide_com_mapa,jogador_esta_na_escada_subida,jogador_esta_na_escada_descida
 from game_content.sistema_vida import sistemavida
 
 pygame.init()
@@ -30,8 +30,11 @@ mapa_atual = mapas[andar_atual]
 jogador = Jogador(x=15, y=15)
 jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
 
-# inimigo
-inimigo = Inimigo(x=400, y=400)
+# inimigos -- um por andar
+inimigos = []
+for mapa in mapas:
+    x_inimigo, y_inimigo = encontrar_posicao_inimigo(mapa)
+    inimigos.append(Inimigo(x=x_inimigo, y=y_inimigo))
 
 # Sistema de Vida
 sistema_vida = sistemavida()
@@ -77,11 +80,20 @@ while rodando:
     else:
         teclas = pygame.key.get_pressed()
 
-        if sistema_vida.fim_jogo:
-            tela.fill((0, 0, 0))
+        inimigo_atual = inimigos[andar_atual]
 
-            texto_go = fonte.render("GAME OVER", True, (220, 30, 30))
-            texto_reiniciar = fonte3.render("Pressione ESPAÇO para reiniciar", True, (255, 255, 255))
+        if sistema_vida.jogador_morto():
+            jogador.mover(
+                teclas,
+                largura,
+                altura,
+                mapa_atual,
+                jogador_colide_com_mapa
+            )
+            inimigo_atual.mover(jogador, mapa_atual, jogador_colide_com_mapa)
+
+        if verificar_colisao(jogador, inimigo_atual):
+            sistema_vida.receber_dano()
 
             tela.blit(texto_go, (largura // 2 - texto_go.get_width() // 2, altura // 2 - 80))
             tela.blit(texto_reiniciar, (largura // 2 - texto_reiniciar.get_width() // 2, altura // 2 + 20))
@@ -124,6 +136,8 @@ while rodando:
 
             if verificar_colisao(jogador, inimigo):
                 sistema_vida.receber_dano()
+
+        inimigo_atual.desenhar(tela)
 
             tempo_atual = pygame.time.get_ticks()
 

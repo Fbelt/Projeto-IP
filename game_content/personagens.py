@@ -1,5 +1,5 @@
 import pygame
-
+import math 
 
 class jogador:
     def __init__(self, x, y):
@@ -37,13 +37,36 @@ class jogador:
 
 
 class inimigo:
-    def __init__(self, x, y):
+   def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.velocidade = 20
-        self.largura = 50
-        self.altura = 50
+        self.velocidade = 3       
+        self.largura = 25
+        self.altura = 25
         self.cor = (255, 0, 0)
 
-    def desenhar(self, tela):
+   def mover(self, alvo, mapa_atual, funcao_colisao_mapa):
+        dx = alvo.x - self.x
+        dy = alvo.y - self.y
+        distancia = math.hypot(dx, dy)
+
+        if distancia < 1:
+            return
+
+        # vetor normalizado na direção do jogador
+        dx /= distancia
+        dy /= distancia
+
+        # move em X e Y separadamente, pra conseguir "deslizar" nas paredes
+        x_antigo = self.x
+        self.x += dx * self.velocidade
+        if funcao_colisao_mapa(mapa_atual, self):
+            self.x = x_antigo
+
+        y_antigo = self.y
+        self.y += dy * self.velocidade
+        if funcao_colisao_mapa(mapa_atual, self):
+            self.y = y_antigo
+
+   def desenhar(self, tela):
         pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
