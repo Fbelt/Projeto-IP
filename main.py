@@ -45,6 +45,8 @@ COOLDOWN_ESCADA = 500
 
 tempo_inicio_visao = 0
 
+jogo_ganho = False
+
 # loop do jogo
 rodando = True
 while rodando:
@@ -63,7 +65,7 @@ while rodando:
 
         texto = fonte.render("Find AI at CIN", True, (255, 255, 255))
         texto2 = fonte2.render("Encontre a IA escondida no CIN!", True, (255, 255, 255))
-        texto3 = fonte3.render("Pressione ESPACO para comecar", True, (255, 255, 255))
+        texto3 = fonte3.render("Pressione ESPAÇO para começar", True, (255, 255, 255))
 
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, 125))
         tela.blit(texto2, (largura // 2 - texto2.get_width() // 2, 200))
@@ -93,45 +95,91 @@ while rodando:
         if verificar_colisao(jogador, inimigo_atual):
             sistema_vida.receber_dano()
 
-        tempo_atual = pygame.time.get_ticks()
+            tela.blit(texto_go, (largura // 2 - texto_go.get_width() // 2, altura // 2 - 80))
+            tela.blit(texto_reiniciar, (largura // 2 - texto_reiniciar.get_width() // 2, altura // 2 + 20))
 
-        if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
+            pygame.display.flip()
 
-            # sobe para o próximo andar usando S
-            if jogador_esta_na_escada_subida(mapa_atual, jogador):
-                if andar_atual < len(mapas) - 1:
-                    andar_atual += 1
-                    mapa_atual = mapas[andar_atual]
+            if teclas[pygame.K_SPACE]:
+                sistema_vida = sistemavida()
+                andar_atual = 0
+                mapa_atual = mapas[andar_atual]
+                jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+                jogo_ganho = False
+                tempo_inicio_visao = pygame.time.get_ticks()
 
-                    # ao subir, nasce no P do novo andar
-                    jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+        elif jogo_ganho:
+            tela.fill((0, 0, 0))
 
-                    tempo_ultima_escada = tempo_atual
-                    tempo_inicio_visao = pygame.time.get_ticks()
+            texto_ganhou = fonte.render("VOCÊ GANHOU!", True, (0, 255, 0))
+            texto_sub = fonte2.render("Você encontrou a IA no CIN!", True, (255, 255, 255))
+            texto_sair = fonte3.render("Pressione ESPAÇO para sair", True, (255, 255, 255))
 
-            # desce para o andar anterior usando B
-            elif jogador_esta_na_escada_descida(mapa_atual, jogador):
-                if andar_atual > 0:
-                    andar_atual -= 1
-                    mapa_atual = mapas[andar_atual]
+            tela.blit(texto_ganhou, (largura // 2 - texto_ganhou.get_width() // 2, altura // 2 - 100))
+            tela.blit(texto_sub, (largura // 2 - texto_sub.get_width() // 2, altura // 2))
+            tela.blit(texto_sair, (largura // 2 - texto_sair.get_width() // 2, altura // 2 + 80))
 
-                    # ao descer, nasce no p do andar anterior
-                    jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+            pygame.display.flip()
 
-                    tempo_ultima_escada = tempo_atual
-                    tempo_inicio_visao = pygame.time.get_ticks()
+            if teclas[pygame.K_SPACE]:
+                rodando = False
 
-        tela.fill((0, 0, 0))
+        else:
+            if sistema_vida.jogador_morto():
+                jogador.mover(
+                    teclas,
+                    largura,
+                    altura,
+                    mapa_atual,
+                    jogador_colide_com_mapa
+                )
 
-        desenhar_mapa(tela, mapa_atual)
+            if verificar_colisao(jogador, inimigo):
+                sistema_vida.receber_dano()
 
         inimigo_atual.desenhar(tela)
 
+            tempo_atual = pygame.time.get_ticks()
 
-        aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
+            if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
 
-        jogador.desenhar(tela)
-        sistema_vida.desenhar(tela)
+                # sobe para o próximo andar usando S
+                if jogador_esta_na_escada_subida(mapa_atual, jogador):
+                    if andar_atual < len(mapas) - 1:
+                        andar_atual += 1
+                        mapa_atual = mapas[andar_atual]
 
-        pygame.display.flip()
-        clock.tick(45)
+                        # ao subir, nasce no P do novo andar
+                        jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+
+                        tempo_ultima_escada = tempo_atual
+                        tempo_inicio_visao = pygame.time.get_ticks()
+
+                        if andar_atual == len(mapas) - 1:
+                            jogo_ganho = True
+
+                # desce para o andar anterior usando B
+                elif jogador_esta_na_escada_descida(mapa_atual, jogador):
+                    if andar_atual > 0:
+                        andar_atual -= 1
+                        mapa_atual = mapas[andar_atual]
+
+                        # ao descer, nasce no p do andar anterior
+                        jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+
+                        tempo_ultima_escada = tempo_atual
+                        tempo_inicio_visao = pygame.time.get_ticks()
+
+            tela.fill((0, 0, 0))
+
+            desenhar_mapa(tela, mapa_atual)
+
+            inimigo.desenhar(tela)
+
+            aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
+
+            jogador.desenhar(tela)
+            sistema_vida.desenhar(tela)
+
+            pygame.display.flip()
+            clock.tick(45)
