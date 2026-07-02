@@ -5,6 +5,8 @@ from game_content import mapa as mapa_modulo
 PROXIMIDADE = 50
 DIST_MINIMA_ENTRE_ITENS = 80
 TAMANHO_SPRITE = 20  
+VELOCIDADE_BUFF_GPT = 7
+DURACAO_INVENCIBILIDADE_CLAUDE = 15000
 
 _fonte_mensagem = None
 
@@ -122,7 +124,19 @@ def desenhar_mensagem(tela, texto, rect_referencia):
     tela.blit(superficie, fundo)
 
 
-def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventario):
+def aplicar_buff(tipo, player, sistema_vida):
+    if tipo == "logo_gpt":
+        player.velocidade = VELOCIDADE_BUFF_GPT
+
+    elif tipo == "logo_gemini":
+        sistema_vida.ganhar_vida()
+
+    elif tipo == "logo_claude":
+        sistema_vida.ativar_invencibilidade_buff(DURACAO_INVENCIBILIDADE_CLAUDE)
+
+
+
+def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventario, sistema_vida):
     rect_jogador = obter_rect_jogador(player)
     item_proximo = checar_proximidade(player, coletaveis, andar_atual)
     item_coletado = None
@@ -136,6 +150,10 @@ def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventa
                 item_proximo.coletado = True
                 coletaveis.remove(item_proximo)
                 inventario.adicionar_item(item_proximo.tipo)
+<<<<<<< HEAD
                 item_coletado = item_proximo
+=======
+                aplicar_buff(item_proximo.tipo, player, sistema_vida)
+>>>>>>> origin/main
 
     return item_coletado
