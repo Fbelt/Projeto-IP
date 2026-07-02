@@ -70,3 +70,36 @@ class inimigo:
 
    def desenhar(self, tela):
         pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
+
+
+class InimigoPatrulha:
+    def __init__(self, x, y, direcao="horizontal"):
+        self.x = x
+        self.y = y
+        self.velocidade = 2.0  # Um pouco mais lento que o perseguidor
+        self.largura = 25
+        self.altura = 25
+        self.cor = (255, 127, 0) # Laranja para diferenciar do perseguidor Vermelho
+        
+        # Define o eixo de movimento
+        self.direcao_eixo = direcao
+        self.sentido = 1 # 1 para direita/baixo, -1 para esquerda/cima
+
+    def mover(self, mapa_atual, funcao_colisao_mapa):
+        x_antigo = self.x
+        y_antigo = self.y
+
+        if self.direcao_eixo == "horizontal":
+            self.x += self.velocidade * self.sentido
+            # Se colidir com a parede, volta e inverte o sentido
+            if funcao_colisao_mapa(mapa_atual, self):
+                self.x = x_antigo
+                self.sentido *= -1
+        else:
+            self.y += self.velocidade * self.sentido
+            if funcao_colisao_mapa(mapa_atual, self):
+                self.y = y_antigo
+                self.sentido *= -1
+
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
