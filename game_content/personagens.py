@@ -40,7 +40,7 @@ class inimigo:
    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.velocidade = 3       
+        self.velocidade = 0       
         self.largura = 25
         self.altura = 25
         self.cor = (255, 0, 0)

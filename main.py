@@ -2,9 +2,18 @@ import pygame
 
 from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
-from game_content.visao import aplicar_visao
+from game_content.visao import aplicar_visao, criar_animacao_revelacao_portas
 from game_content.batalha import verificar_colisao
-from game_content.mapa import mapas, desenhar_mapa, encontrar_posicao_inicial, encontrar_posicao_spawn_descida, encontrar_posicao_inimigo, jogador_colide_com_mapa, jogador_esta_na_escada_subida, jogador_esta_na_escada_descida
+from game_content.mapa import (
+    mapas,
+    desenhar_mapa,
+    encontrar_posicao_inicial,
+    encontrar_posicao_spawn_descida,
+    encontrar_posicao_inimigo,
+    jogador_colide_com_mapa,
+    jogador_esta_na_escada_subida,
+    jogador_esta_na_escada_descida
+)
 from game_content.sistema_vida import sistemavida
 from game_content import coletaveis as coletaveis_modulo
 from game_content import inventario as inventario_modulo
@@ -50,7 +59,7 @@ tempo_ultima_escada = 0
 COOLDOWN_ESCADA = 500
 
 tempo_inicio_visao = 0
-
+animacoes_revelacao_portas = []
 jogo_ganho = False
 
 # textos da tela de game over
@@ -111,6 +120,7 @@ while rodando:
                 lista_coletaveis = coletaveis_modulo.sortear_posicoes_coletaveis()
                 inventario = inventario_modulo.Inventario()
                 tempo_inicio_visao = pygame.time.get_ticks()
+                animacoes_revelacao_portas = []
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -136,10 +146,9 @@ while rodando:
                 largura,
                 altura,
                 mapa_atual,
-                jogador_colide_com_mapa
+                lambda mapa, personagem: jogador_colide_com_mapa(mapa, personagem, inventario)
             )
-            inimigo_atual.mover(jogador, mapa_atual, jogador_colide_com_mapa)
-
+            
             # a própria classe sistemavida já ignora dano repetido
             # durante a janela de invencibilidade (tempo_invencivel_pos_dano)
             if verificar_colisao(jogador, inimigo_atual):
@@ -161,7 +170,7 @@ while rodando:
                         tempo_ultima_escada = tempo_atual
                         tempo_inicio_visao = pygame.time.get_ticks()
 
-                        if andar_atual == len(mapas) - 1:
+                        if inventario.completo():
                             jogo_ganho = True
 
                 # desce para o andar anterior usando B
@@ -186,16 +195,35 @@ while rodando:
 
             inimigo_atual.desenhar(tela)
 
-            aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
+            aplicar_visao(
+                        tela,
+                        jogador,
+                        mapa_atual,
+                        tempo_inicio_visao,
+                        inventario,
+                        animacoes_revelacao_portas
+                    )
 
             jogador.desenhar(tela)
             sistema_vida.desenhar(tela)
 
-            coletaveis_modulo.atualizar_coletaveis(
-                tela, jogador, lista_coletaveis, andar_atual, eventos, inventario
-            )
+            item_coletado = coletaveis_modulo.atualizar_coletaveis(
+                                                                tela,
+                                                                jogador,
+                                                                lista_coletaveis,
+                                                                andar_atual,
+                                                                eventos,
+                                                                inventario
+                                                            )
 
-            inventario_modulo.desenhar_hud(tela, inventario)
+            if item_coletado is not None:
+                if item_coletado.tipo in ["chave_azul", "chave_verde", "chave_vermelha"]:
+                    animacao = criar_animacao_revelacao_portas(mapa_atual, item_coletado.tipo)
+
+                    if animacao is not None:
+                        animacoes_revelacao_portas.append(animacao)
+
+                        inventario_modulo.desenhar_hud(tela, inventario)
 
             pygame.display.flip()
 
