@@ -142,17 +142,37 @@ class inimigo:
         self.movendo = (self.x != x_inicial) or (self.y != y_inicial)
 
    def desenhar(self, tela):
-        if self.movendo:
-            agora = pygame.time.get_ticks()
-            if agora - self.tempo_ultimo_frame > INTERVALO_ANIMACAO:
-                self.frame_andando = 1 - self.frame_andando
-                self.tempo_ultimo_frame = agora
-            imagem = self.sprites["andando"][self.frame_andando]
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
+
+
+class InimigoPatrulha:
+    def __init__(self, x, y, direcao="horizontal"):
+        self.x = x
+        self.y = y
+        self.velocidade = 2.0  # Um pouco mais lento que o perseguidor
+        self.largura = 25
+        self.altura = 25
+        self.cor = (255, 127, 0) # Laranja para diferenciar do perseguidor Vermelho
+        
+        # Define o eixo de movimento
+        self.direcao_eixo = direcao
+        self.sentido = 1 # 1 para direita/baixo, -1 para esquerda/cima
+
+    def mover(self, mapa_atual, funcao_colisao_mapa):
+        x_antigo = self.x
+        y_antigo = self.y
+
+        if self.direcao_eixo == "horizontal":
+            self.x += self.velocidade * self.sentido
+            # Se colidir com a parede, volta e inverte o sentido
+            if funcao_colisao_mapa(mapa_atual, self):
+                self.x = x_antigo
+                self.sentido *= -1
         else:
-            imagem = self.sprites["idle"]
+            self.y += self.velocidade * self.sentido
+            if funcao_colisao_mapa(mapa_atual, self):
+                self.y = y_antigo
+                self.sentido *= -1
 
-        if self.direcao == -1:
-            imagem = pygame.transform.flip(imagem, True, False)
-
-        rect = imagem.get_rect(midbottom=(self.x + self.largura // 2, self.y + self.altura))
-        tela.blit(imagem, rect)
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))

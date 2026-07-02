@@ -4,7 +4,7 @@ from game_content.personagens import jogador as Jogador
 from game_content.personagens import inimigo as Inimigo
 from game_content.visao import aplicar_visao
 from game_content.batalha import verificar_colisao
-from game_content.mapa import mapas, desenhar_mapa, encontrar_posicao_inicial, encontrar_posicao_spawn_descida, encontrar_posicao_inimigo, jogador_colide_com_mapa, jogador_esta_na_escada_subida, jogador_esta_na_escada_descida
+from game_content.mapa import mapas, desenhar_mapa, encontrar_posicao_inicial, encontrar_posicao_spawn_descida, encontrar_posicao_inimigo, jogador_colide_com_mapa, jogador_esta_na_escada_subida, jogador_esta_na_escada_descida, encontrar_posicoes_patrulhas
 from game_content.sistema_vida import sistemavida
 from game_content import coletaveis as coletaveis_modulo
 from game_content import inventario as inventario_modulo
@@ -37,6 +37,22 @@ inimigos = []
 for mapa in mapas:
     x_inimigo, y_inimigo = encontrar_posicao_inimigo(mapa)
     inimigos.append(Inimigo(x=x_inimigo, y=y_inimigo))
+
+
+patrulhas_por_andar = []
+for mapa in mapas:
+    lista_do_andar = []
+    posicoes_v = encontrar_posicoes_patrulhas(mapa)
+    
+    # Cria um inimigo de patrulha para cada 'V' encontrado
+    # Alterna entre horizontal e vertical para dar variedade
+    for i, (x_v, y_v) in enumerate(posicoes_v):
+        eixo = "horizontal" if i % 2 == 0 else "vertical"
+        # Importante: Se sua classe no personagens.py começar com maiúscula, use InimigoPatrulha
+        from game_content.personagens import InimigoPatrulha 
+        lista_do_andar.append(InimigoPatrulha(x=x_v, y=y_v, direcao=eixo))
+        
+    patrulhas_por_andar.append(lista_do_andar)
 
 # Sistema de Vida
 sistema_vida = sistemavida()
@@ -145,6 +161,15 @@ while rodando:
             if verificar_colisao(jogador, inimigo_atual):
                 sistema_vida.receber_dano()
 
+            patrulhas_atuais = patrulhas_por_andar[andar_atual]
+            for patrulha in patrulhas_atuais:
+                # Faz a patrulha andar e rebater nas paredes
+                patrulha.mover(mapa_atual, jogador_colide_com_mapa)
+                
+                # Checa colisão com a patrulha (Usando os 2 argumentos originais)
+                if verificar_colisao(jogador, patrulha):
+                    sistema_vida.receber_dano()
+
             tempo_atual = pygame.time.get_ticks()
 
             if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
@@ -182,6 +207,9 @@ while rodando:
                     tela.blit(item.image, item.rect)
 
             inimigo_atual.desenhar(tela)
+
+            for patrulha in patrulhas_atuais:
+                patrulha.desenhar(tela)
 
             aplicar_visao(tela, jogador, mapa_atual, tempo_inicio_visao)
 
