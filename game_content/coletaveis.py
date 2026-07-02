@@ -150,10 +150,7 @@ def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventa
                 item_proximo.coletado = True
                 coletaveis.remove(item_proximo)
                 inventario.adicionar_item(item_proximo.tipo)
-<<<<<<< HEAD
                 item_coletado = item_proximo
-=======
                 aplicar_buff(item_proximo.tipo, player, sistema_vida)
->>>>>>> origin/main
 
     return item_coletado

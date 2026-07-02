@@ -244,7 +244,8 @@ while rodando:
                                                                 lista_coletaveis,
                                                                 andar_atual,
                                                                 eventos,
-                                                                inventario
+                                                                inventario,
+                                                                sistema_vida
                                                             )
 
             if item_coletado is not None:
