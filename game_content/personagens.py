@@ -1,12 +1,9 @@
 import pygame
-import math
 
 ALTURA_SPRITE_JOGADOR = 70
-ALTURA_SPRITE_INIMIGO = ALTURA_SPRITE_JOGADOR
 INTERVALO_ANIMACAO = 150  # ms entre troca de frames andando
 
 _sprites_jogador = {}
-_sprites_inimigo = {}
 
 
 def _carregar_sprites(cache, caminho_idle, caminho_walk1, altura_alvo):
@@ -28,10 +25,6 @@ def _carregar_sprites(cache, caminho_idle, caminho_walk1, altura_alvo):
 
 def _carregar_sprites_jogador():
     return _carregar_sprites(_sprites_jogador, "imagens/guilherme_idle.png", "imagens/guilherme_walk1.png", ALTURA_SPRITE_JOGADOR)
-
-
-def _carregar_sprites_inimigo():
-    return _carregar_sprites(_sprites_inimigo, "imagens/fabio_idle.png", "imagens/fabio_walk1.png", ALTURA_SPRITE_INIMIGO)
 
 
 class jogador:
@@ -90,59 +83,6 @@ class jogador:
 
         rect = imagem.get_rect(midbottom=(self.x + self.largura // 2, self.y + self.altura))
         tela.blit(imagem, rect)
-
-
-class inimigo:
-   def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.velocidade = 0      
-        self.largura = 25
-        self.altura = 25
-        self.cor = (255, 0, 0)
-
-        self.sprites = _carregar_sprites_inimigo()
-        self.movendo = False
-        self.frame_andando = 0
-        self.tempo_ultimo_frame = 0
-        self.direcao = 1  # 1 = direita (padrão), -1 = esquerda
-
-   def mover(self, alvo, mapa_atual, funcao_colisao_mapa):
-        dx = alvo.x - self.x
-        dy = alvo.y - self.y
-        distancia = math.hypot(dx, dy)
-
-        if distancia < 1:
-            self.movendo = False
-            return
-
-        # vetor normalizado na direção do jogador
-        dx /= distancia
-        dy /= distancia
-
-        if dx > 0:
-            self.direcao = 1
-        elif dx < 0:
-            self.direcao = -1
-
-        x_inicial = self.x
-        y_inicial = self.y
-
-        # move em X e Y separadamente, pra conseguir "deslizar" nas paredes
-        x_antigo = self.x
-        self.x += dx * self.velocidade
-        if funcao_colisao_mapa(mapa_atual, self):
-            self.x = x_antigo
-
-        y_antigo = self.y
-        self.y += dy * self.velocidade
-        if funcao_colisao_mapa(mapa_atual, self):
-            self.y = y_antigo
-
-        self.movendo = (self.x != x_inicial) or (self.y != y_inicial)
-
-   def desenhar(self, tela):
-        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
 
 
 class InimigoPatrulha:

@@ -1,7 +1,6 @@
 import pygame
 
 from game_content.personagens import jogador as Jogador
-from game_content.personagens import inimigo as Inimigo
 from game_content.visao import aplicar_visao, criar_animacao_revelacao_portas
 from game_content.batalha import verificar_colisao
 from game_content.mapa import (
@@ -9,7 +8,6 @@ from game_content.mapa import (
     desenhar_mapa,
     encontrar_posicao_inicial,
     encontrar_posicao_spawn_descida,
-    encontrar_posicao_inimigo,
     jogador_colide_com_mapa,
     jogador_esta_na_escada_subida,
     jogador_esta_na_escada_descida,
@@ -43,13 +41,6 @@ mapa_atual = mapas[andar_atual]
 # onde vai nascer o jogador
 jogador = Jogador(x=15, y=15)
 jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
-
-# inimigos -- um por andar
-inimigos = []
-for mapa in mapas:
-    x_inimigo, y_inimigo = encontrar_posicao_inimigo(mapa)
-    inimigos.append(Inimigo(x=x_inimigo, y=y_inimigo))
-
 
 patrulhas_por_andar = []
 for mapa in mapas:
@@ -124,7 +115,6 @@ while rodando:
 
     else:
         teclas = pygame.key.get_pressed()
-        inimigo_atual = inimigos[andar_atual]
         patrulhas_atuais = patrulhas_por_andar[andar_atual]
 
         # --- estado: jogador morreu ---
@@ -231,9 +221,6 @@ while rodando:
                     if not boss_fernanda.dialogo_inicial_mostrado:
                         estado_jogo = "dialogo_fernanda"
 
-                if verificar_colisao(jogador, inimigo_atual):
-                    sistema_vida.receber_dano()
-
                 for patrulha in patrulhas_atuais:
                     patrulha.mover(mapa_atual, jogador_colide_com_mapa)
 
@@ -283,8 +270,6 @@ while rodando:
             for item in lista_coletaveis:
                 if item.andar == andar_atual and not item.coletado:
                     tela.blit(item.image, item.rect)
-
-            inimigo_atual.desenhar(tela)
 
             for patrulha in patrulhas_atuais:
                 patrulha.desenhar(tela)
