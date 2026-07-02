@@ -96,11 +96,7 @@ class inimigo:
    def __init__(self, x, y):
         self.x = x
         self.y = y
-<<<<<<< HEAD
-        self.velocidade = 0       
-=======
         self.velocidade = 0      
->>>>>>> origin/main
         self.largura = 25
         self.altura = 25
         self.cor = (255, 0, 0)
