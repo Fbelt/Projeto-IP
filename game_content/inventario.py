@@ -73,6 +73,9 @@ class Inventario:
     def adicionar_item(self, tipo):
         self.itens_coletados.append(tipo)
 
+    def tem_item(self, tipo):
+        return tipo in self.itens_coletados
+
     def quantidade_total(self):
         return len(self.itens_coletados)
 

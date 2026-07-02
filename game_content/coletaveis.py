@@ -40,51 +40,55 @@ class Coletaveis(pygame.sprite.Sprite):
         self.tipo = tipo
         self.coletado = False
 
+PONTOS_SPAWN_COLETAVEIS = {
+    "chave_azul": [
+        (0, 13, 0),
+        (0, 25, 9),
+        (0, 3, 46),
+    ],
 
-def obter_posicao_andavel_aleatoria(andar):
-    grade = mapa_modulo.mapas[andar]
+    "chave_verde": [
+        (1, 26, 18),
+        (1, 1, 0),
+        (1, 23, 10),
+    ],
 
-    while True:
-        linha_indice = random.randrange(len(grade))
-        coluna_indice = random.randrange(len(grade[linha_indice]))
-        bloco = grade[linha_indice][coluna_indice]
+    "chave_vermelha": [
+        (2, 7, 23),
+        (2, 28, 46),
+        (2, 25, 15),
+    ],
 
-        if bloco != "#":
-            x = coluna_indice * mapa_modulo.TAMANHO_TILE + mapa_modulo.TAMANHO_TILE // 2
-            y = linha_indice * mapa_modulo.TAMANHO_TILE + mapa_modulo.TAMANHO_TILE // 2
-            return x, y
+    "logo_gpt": [
+        (0, 24, 41),
+        (0, 29, 44),
+        (0, 29, 37),
+    ],
+
+    "logo_gemini": [
+        (2, 21, 28),
+        (2, 7, 32),
+        (2, 3, 8),
+    ],
+}
 
 
-def posicao_valida(x, y, andar, existentes, dist_minima=DIST_MINIMA_ENTRE_ITENS):
-    for c in existentes:
-        if c.andar == andar:
-            d = pygame.math.Vector2(x, y).distance_to(c.rect.center)
-            if d < dist_minima:
-                return False
-    return True
+def converter_tile_para_pixel(linha, coluna):
+    x = coluna * mapa_modulo.TAMANHO_TILE + mapa_modulo.TAMANHO_TILE // 2
+    y = linha * mapa_modulo.TAMANHO_TILE + mapa_modulo.TAMANHO_TILE // 2
+
+    return x, y
 
 
-def sortear_posicoes_coletaveis(andares=(0, 1, 2)):
-    tipos = [
-        "chave_azul",
-        "chave_verde",
-        "chave_vermelha",
-        "logo_claude",
-        "logo_gpt",
-        "logo_gemini",
-    ]
-    random.shuffle(tipos)
-
+def sortear_posicoes_coletaveis():
     coletaveis = []
-    tentativas_max = 200
 
-    for tipo in tipos:
-        for _ in range(tentativas_max):
-            andar = random.choice(andares)
-            x, y = obter_posicao_andavel_aleatoria(andar)
-            if posicao_valida(x, y, andar, coletaveis):
-                coletaveis.append(Coletaveis(x, y, andar, tipo))
-                break
+    for tipo, pontos_possiveis in PONTOS_SPAWN_COLETAVEIS.items():
+        andar, linha, coluna = random.choice(pontos_possiveis)
+        x, y = converter_tile_para_pixel(linha, coluna)
+
+        coletavel = Coletaveis(x, y, andar, tipo)
+        coletaveis.append(coletavel)
 
     return coletaveis
 
@@ -135,6 +139,7 @@ def aplicar_buff(tipo, player, sistema_vida):
 def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventario, sistema_vida):
     rect_jogador = obter_rect_jogador(player)
     item_proximo = checar_proximidade(player, coletaveis, andar_atual)
+    item_coletado = None
 
     if item_proximo:
         desenhar_mensagem(tela, "Aperte F para coletar este item", rect_jogador)
@@ -145,6 +150,7 @@ def atualizar_coletaveis(tela, player, coletaveis, andar_atual, eventos, inventa
                 item_proximo.coletado = True
                 coletaveis.remove(item_proximo)
                 inventario.adicionar_item(item_proximo.tipo)
+                item_coletado = item_proximo
                 aplicar_buff(item_proximo.tipo, player, sistema_vida)
 
-    return item_proximo
+    return item_coletado
