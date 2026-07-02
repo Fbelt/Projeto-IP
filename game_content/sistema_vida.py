@@ -27,11 +27,31 @@ class sistemavida:
     def __init__(self):
         self.vidas = vidas_inicias
         self.tempo_ultimo_dano = -tempo_invencivel_pos_dano
-        self.fim_jogo = False
+        self.fim_jogo = False 
+        self.tempo_fim_invencibilidade_buff = 0
+
+
+    def ativar_invencibilidade_buff(self, duracao_ms):
+        tempo_atual = pygame.time.get_ticks()
+        fim_proposto = tempo_atual + duracao_ms
+        self.tempo_fim_invencibilidade_buff = max(
+            self.tempo_fim_invencibilidade_buff,
+            fim_proposto
+        )
+
+
+    def esta_invencivel_por_buff(self):
+        tempo_atual = pygame.time.get_ticks()
+        return tempo_atual < self.tempo_fim_invencibilidade_buff    
+
 
     def receber_dano(self):
         if self.fim_jogo:
             return False
+        
+        if self.esta_invencivel_por_buff():
+            return False
+
         tempo_atual = pygame.time.get_ticks()
         
         if (tempo_atual - self.tempo_ultimo_dano) < tempo_invencivel_pos_dano:
