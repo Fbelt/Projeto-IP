@@ -19,6 +19,7 @@ from game_content.mapa import (
 from game_content.sistema_vida import sistemavida
 from game_content import coletaveis as coletaveis_modulo
 from game_content import inventario as inventario_modulo
+from game_content.fernanda import BossFernanda
 
 pygame.init()
 
@@ -65,6 +66,9 @@ for mapa in mapas:
         
     patrulhas_por_andar.append(lista_do_andar)
 
+# Boss Fernanda
+boss_fernanda = BossFernanda()
+
 # Sistema de Vida
 sistema_vida = sistemavida()
 
@@ -79,6 +83,8 @@ COOLDOWN_ESCADA = 500
 tempo_inicio_visao = 0
 animacoes_revelacao_portas = []
 jogo_ganho = False
+
+estado_jogo = "normal"
 
 # textos da tela de game over
 texto_go = fonte.render("GAME OVER", True, (220, 30, 30))
@@ -119,6 +125,7 @@ while rodando:
     else:
         teclas = pygame.key.get_pressed()
         inimigo_atual = inimigos[andar_atual]
+        patrulhas_atuais = patrulhas_por_andar[andar_atual]
 
         # --- estado: jogador morreu ---
         if sistema_vida.fim_jogo:
@@ -139,6 +146,8 @@ while rodando:
                 inventario = inventario_modulo.Inventario()
                 tempo_inicio_visao = pygame.time.get_ticks()
                 animacoes_revelacao_portas = []
+                estado_jogo = "normal"
+                boss_fernanda = BossFernanda()
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -159,67 +168,128 @@ while rodando:
 
         # --- estado: jogo normal ---
         else:
-            jogador.mover(
-                teclas,
-                largura,
-                altura,
-                mapa_atual,
-                lambda mapa, personagem: jogador_colide_com_mapa(mapa, personagem, inventario)
-            )
-            
-            # a própria classe sistemavida já ignora dano repetido
-            # durante a janela de invencibilidade (tempo_invencivel_pos_dano)
-            if verificar_colisao(jogador, inimigo_atual):
-                sistema_vida.receber_dano()
+            if estado_jogo == "quiz_fernanda":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN:
+                        if evento.key == pygame.K_1 or evento.key == pygame.K_KP1:
+                            boss_fernanda.responder_quiz(0, sistema_vida)
 
-            patrulhas_atuais = patrulhas_por_andar[andar_atual]
-            for patrulha in patrulhas_atuais:
-                # Faz a patrulha andar e rebater nas paredes
-                patrulha.mover(mapa_atual, jogador_colide_com_mapa)
-                
-                # Checa colisão com a patrulha (Usando os 2 argumentos originais)
-                if verificar_colisao(jogador, patrulha):
+                        elif evento.key == pygame.K_2 or evento.key == pygame.K_KP2:
+                            boss_fernanda.responder_quiz(1, sistema_vida)
+
+                        elif evento.key == pygame.K_3 or evento.key == pygame.K_KP3:
+                            boss_fernanda.responder_quiz(2, sistema_vida)
+
+                        elif evento.key == pygame.K_4 or evento.key == pygame.K_KP4:
+                            boss_fernanda.responder_quiz(3, sistema_vida)
+
+                        elif evento.key == pygame.K_SPACE:
+                            resultado_quiz = boss_fernanda.avancar_feedback_quiz()
+
+                            if resultado_quiz == "aprovado":
+                                boss_fernanda.iniciar_recompensa()
+                                estado_jogo = "recompensa_fernanda"
+
+                boss_fernanda.desenhar_tela_quiz(tela, sistema_vida)
+
+                pygame.display.flip()
+                clock.tick(45)
+                continue
+
+            elif estado_jogo == "recompensa_fernanda":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                        acao_recompensa = boss_fernanda.avancar_recompensa()
+
+                        if acao_recompensa == "coletar_claude":
+                            if not inventario.tem_item("logo_claude"):
+                                inventario.adicionar_item("logo_claude")
+                                coletaveis_modulo.aplicar_buff("logo_claude", jogador, sistema_vida)
+
+                            boss_fernanda.marcar_como_derrotada()
+                            estado_jogo = "normal"
+                            tempo_inicio_visao = pygame.time.get_ticks()
+
+                boss_fernanda.desenhar_tela_recompensa(tela)
+
+                pygame.display.flip()
+                clock.tick(45)
+                continue
+            if estado_jogo == "normal":
+                jogador.mover(
+                    teclas,
+                    largura,
+                    altura,
+                    mapa_atual,
+                    lambda mapa, personagem: (
+                        jogador_colide_com_mapa(mapa, personagem, inventario)
+                        or boss_fernanda.bloqueia_passagem(personagem, andar_atual)
+                    )
+                )
+
+                if boss_fernanda.esta_perto_do_jogador(jogador, andar_atual):
+                    if not boss_fernanda.dialogo_inicial_mostrado:
+                        estado_jogo = "dialogo_fernanda"
+
+                if verificar_colisao(jogador, inimigo_atual):
                     sistema_vida.receber_dano()
 
-            tempo_atual = pygame.time.get_ticks()
+                for patrulha in patrulhas_atuais:
+                    patrulha.mover(mapa_atual, jogador_colide_com_mapa)
 
-            if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
+                    if verificar_colisao(jogador, patrulha):
+                        sistema_vida.receber_dano()
 
-                # sobe para o próximo andar usando S
-                if jogador_esta_na_escada_subida(mapa_atual, jogador):
-                    if andar_atual < len(mapas) - 1:
-                        andar_atual += 1
-                        mapa_atual = mapas[andar_atual]
+                tempo_atual = pygame.time.get_ticks()
 
-                        # ao subir, nasce no P do novo andar
-                        jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+                if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
 
-                        tempo_ultima_escada = tempo_atual
-                        tempo_inicio_visao = pygame.time.get_ticks()
+                    if jogador_esta_na_escada_subida(mapa_atual, jogador):
+                        if andar_atual == boss_fernanda.andar and not boss_fernanda.derrotada:
+                            estado_jogo = "dialogo_fernanda"
+                            tempo_ultima_escada = tempo_atual
+ 
+                        elif andar_atual < len(mapas) - 1:
+                            andar_atual += 1
+                            mapa_atual = mapas[andar_atual]
 
-                        if inventario.completo():
-                            jogo_ganho = True
+                            jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
 
-                # desce para o andar anterior usando B
-                elif jogador_esta_na_escada_descida(mapa_atual, jogador):
-                    if andar_atual > 0:
-                        andar_atual -= 1
-                        mapa_atual = mapas[andar_atual]
+                            tempo_ultima_escada = tempo_atual
+                            tempo_inicio_visao = pygame.time.get_ticks()
 
-                        # ao descer, nasce no p do andar anterior
-                        jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+                            if inventario.completo():
+                                jogo_ganho = True
 
-                        tempo_ultima_escada = tempo_atual
-                        tempo_inicio_visao = pygame.time.get_ticks()
+                    elif jogador_esta_na_escada_descida(mapa_atual, jogador):
+                        if andar_atual > 0:
+                            andar_atual -= 1
+                            mapa_atual = mapas[andar_atual]
 
+                            jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+
+                            tempo_ultima_escada = tempo_atual
+                            tempo_inicio_visao = pygame.time.get_ticks()
+            elif estado_jogo == "dialogo_fernanda":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                        boss_fernanda.marcar_dialogo_inicial_mostrado()
+                        boss_fernanda.iniciar_quiz()
+                        estado_jogo = "quiz_fernanda"
             tela.fill((0, 0, 0))
 
             desenhar_mapa(tela, mapa_atual)
+
+            for item in lista_coletaveis:
+                if item.andar == andar_atual and not item.coletado:
+                    tela.blit(item.image, item.rect)
 
             inimigo_atual.desenhar(tela)
 
             for patrulha in patrulhas_atuais:
                 patrulha.desenhar(tela)
+
+            boss_fernanda.desenhar(tela, andar_atual)
 
             aplicar_visao(
                 tela,
@@ -229,6 +299,8 @@ while rodando:
                 inventario,
                 animacoes_revelacao_portas
             )
+            if estado_jogo == "dialogo_fernanda":
+                boss_fernanda.desenhar_dialogo(tela)
 
             jogador.desenhar(tela)
             sistema_vida.desenhar(tela)
@@ -250,7 +322,7 @@ while rodando:
                     if animacao is not None:
                         animacoes_revelacao_portas.append(animacao)
 
-                        inventario_modulo.desenhar_hud(tela, inventario)
+            inventario_modulo.desenhar_hud(tela, inventario)
 
             pygame.display.flip()
 
