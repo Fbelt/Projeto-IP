@@ -7,7 +7,7 @@ def verificar_colisao(jogador, inimigo):
     )
 
     if colidiu:
-        knockback = 5
+        knockback = 0
         if jogador.x < inimigo.x:
             jogador.x -= knockback
         else:
