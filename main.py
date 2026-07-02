@@ -161,9 +161,6 @@ while rodando:
                         tempo_ultima_escada = tempo_atual
                         tempo_inicio_visao = pygame.time.get_ticks()
 
-                        if andar_atual == len(mapas) - 1:
-                            jogo_ganho = True
-
                 # desce para o andar anterior usando B
                 elif jogador_esta_na_escada_descida(mapa_atual, jogador):
                     if andar_atual > 0:
@@ -194,6 +191,9 @@ while rodando:
             coletaveis_modulo.atualizar_coletaveis(
                 tela, jogador, lista_coletaveis, andar_atual, eventos, inventario
             )
+
+            if not lista_coletaveis:
+                jogo_ganho = True
 
             inventario_modulo.desenhar_hud(tela, inventario)
 
