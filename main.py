@@ -216,25 +216,20 @@ while rodando:
 
             desenhar_mapa(tela, mapa_atual)
 
-            for item in lista_coletaveis:
-                if item.andar == andar_atual and not item.coletado:
-                    tela.blit(item.image, item.rect)
-
             inimigo_atual.desenhar(tela)
 
-            aplicar_visao(
-                        tela,
-                        jogador,
-                        mapa_atual,
-                        tempo_inicio_visao,
-                        inventario,
-                        animacoes_revelacao_portas
-                    )
-            
             for patrulha in patrulhas_atuais:
                 patrulha.desenhar(tela)
 
-            
+            aplicar_visao(
+                tela,
+                jogador,
+                mapa_atual,
+                tempo_inicio_visao,
+                inventario,
+                animacoes_revelacao_portas
+            )
+
             jogador.desenhar(tela)
             sistema_vida.desenhar(tela)
 
