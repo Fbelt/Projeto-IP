@@ -2,6 +2,7 @@ import pygame
 
 ALTURA_SPRITE_JOGADOR = 70
 INTERVALO_ANIMACAO = 150  # ms entre troca de frames andando
+TAMANHO_VISUAL_JOGADOR = 25  # pé/âncora do sprite, independente da hitbox
 
 _sprites_jogador = {}
 
@@ -32,8 +33,8 @@ class jogador:
         self.x = x
         self.y = y
         self.velocidade = 5
-        self.largura = 25
-        self.altura = 25
+        self.largura = 16
+        self.altura = 16
         self.cor = (0, 255, 0)
 
         self.sprites = _carregar_sprites_jogador()
@@ -81,7 +82,7 @@ class jogador:
         if self.direcao == -1:
             imagem = pygame.transform.flip(imagem, True, False)
 
-        rect = imagem.get_rect(midbottom=(self.x + self.largura // 2, self.y + self.altura))
+        rect = imagem.get_rect(midbottom=(self.x + TAMANHO_VISUAL_JOGADOR // 2, self.y + TAMANHO_VISUAL_JOGADOR))
         tela.blit(imagem, rect)
 
 
