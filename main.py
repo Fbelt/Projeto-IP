@@ -189,7 +189,7 @@ while rodando:
             sistema_vida.desenhar(tela)
 
             coletaveis_modulo.atualizar_coletaveis(
-                tela, jogador, lista_coletaveis, andar_atual, eventos, inventario
+                tela, jogador, lista_coletaveis, andar_atual, eventos, inventario, sistema_vida
             )
 
             if not lista_coletaveis:
