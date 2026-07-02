@@ -64,7 +64,18 @@ class sistemavida:
             self.fim_jogo = True
         
         return True
+    def perder_vida_quiz(self):
+        if self.fim_jogo:
+            return False
 
+        self.vidas -= 1
+
+        if self.vidas <= 0:
+            self.vidas = 0
+            self.fim_jogo = True
+
+        return True
+    
     def ganhar_vida(self):
         if self.vidas < vidas_maximas:
             self.vidas += 1

@@ -168,6 +168,53 @@ while rodando:
 
         # --- estado: jogo normal ---
         else:
+            if estado_jogo == "quiz_fernanda":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN:
+                        if evento.key == pygame.K_1 or evento.key == pygame.K_KP1:
+                            boss_fernanda.responder_quiz(0, sistema_vida)
+
+                        elif evento.key == pygame.K_2 or evento.key == pygame.K_KP2:
+                            boss_fernanda.responder_quiz(1, sistema_vida)
+
+                        elif evento.key == pygame.K_3 or evento.key == pygame.K_KP3:
+                            boss_fernanda.responder_quiz(2, sistema_vida)
+
+                        elif evento.key == pygame.K_4 or evento.key == pygame.K_KP4:
+                            boss_fernanda.responder_quiz(3, sistema_vida)
+
+                        elif evento.key == pygame.K_SPACE:
+                            resultado_quiz = boss_fernanda.avancar_feedback_quiz()
+
+                            if resultado_quiz == "aprovado":
+                                boss_fernanda.iniciar_recompensa()
+                                estado_jogo = "recompensa_fernanda"
+
+                boss_fernanda.desenhar_tela_quiz(tela, sistema_vida)
+
+                pygame.display.flip()
+                clock.tick(45)
+                continue
+
+            elif estado_jogo == "recompensa_fernanda":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                        acao_recompensa = boss_fernanda.avancar_recompensa()
+
+                        if acao_recompensa == "coletar_claude":
+                            if not inventario.tem_item("logo_claude"):
+                                inventario.adicionar_item("logo_claude")
+                                coletaveis_modulo.aplicar_buff("logo_claude", jogador, sistema_vida)
+
+                            boss_fernanda.marcar_como_derrotada()
+                            estado_jogo = "normal"
+                            tempo_inicio_visao = pygame.time.get_ticks()
+
+                boss_fernanda.desenhar_tela_recompensa(tela)
+
+                pygame.display.flip()
+                clock.tick(45)
+                continue
             if estado_jogo == "normal":
                 jogador.mover(
                     teclas,
@@ -198,7 +245,11 @@ while rodando:
                 if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
 
                     if jogador_esta_na_escada_subida(mapa_atual, jogador):
-                        if andar_atual < len(mapas) - 1:
+                        if andar_atual == boss_fernanda.andar and not boss_fernanda.derrotada:
+                            estado_jogo = "dialogo_fernanda"
+                            tempo_ultima_escada = tempo_atual
+ 
+                        elif andar_atual < len(mapas) - 1:
                             andar_atual += 1
                             mapa_atual = mapas[andar_atual]
 
@@ -223,7 +274,8 @@ while rodando:
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
                         boss_fernanda.marcar_dialogo_inicial_mostrado()
-                        estado_jogo = "normal"
+                        boss_fernanda.iniciar_quiz()
+                        estado_jogo = "quiz_fernanda"
             tela.fill((0, 0, 0))
 
             desenhar_mapa(tela, mapa_atual)
@@ -270,7 +322,7 @@ while rodando:
                     if animacao is not None:
                         animacoes_revelacao_portas.append(animacao)
 
-                        inventario_modulo.desenhar_hud(tela, inventario)
+            inventario_modulo.desenhar_hud(tela, inventario)
 
             pygame.display.flip()
 
