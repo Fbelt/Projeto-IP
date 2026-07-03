@@ -125,9 +125,20 @@ TEXTOS_ANDARES = {
     2: "3º ANDAR DO CIN",
 }
 
-DURACAO_MENSAGEM_ANDAR = 2000
+DURACAO_MENSAGEM_ANDAR = TEMPO_MAPA_VISIVEL + TEMPO_FECHAMENTO_VISAO
 mensagem_andar = None
 tempo_inicio_mensagem_andar = 0
+
+# transição entre andares
+DURACAO_TRANSICAO_ANDAR = 600
+
+transicao_andar = {
+    "fase": None,
+    "inicio": 0,
+    "andar_destino": 0,
+    "tipo_spawn": None,
+    "alpha": 0
+}
 
 estado_jogo = "normal"
 
@@ -204,6 +215,13 @@ while rodando:
                 mensagem_instrucao = None
                 mensagem_andar = TEXTOS_ANDARES[andar_atual]
                 tempo_inicio_mensagem_andar = pygame.time.get_ticks()
+                transicao_andar = {
+                    "fase": None,
+                    "inicio": 0,
+                    "andar_destino": 0,
+                    "tipo_spawn": None,
+                    "alpha": 0
+                }
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -291,6 +309,47 @@ while rodando:
                 pygame.display.flip()
                 clock.tick(45)
                 continue
+            elif estado_jogo == "transicao_andar":
+                tempo_atual_transicao = pygame.time.get_ticks()
+                tempo_passado_transicao = tempo_atual_transicao - transicao_andar["inicio"]
+
+                progresso_transicao = tempo_passado_transicao / DURACAO_TRANSICAO_ANDAR
+
+                if progresso_transicao > 1:
+                    progresso_transicao = 1
+
+                if transicao_andar["fase"] == "saida":
+                    transicao_andar["alpha"] = int(255 * progresso_transicao)
+
+                    if progresso_transicao >= 1:
+                        andar_atual = transicao_andar["andar_destino"]
+                        mapa_atual = mapas[andar_atual]
+
+                        if transicao_andar["tipo_spawn"] == "subida":
+                            jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
+                        else:
+                            jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
+
+                        patrulhas_atuais = patrulhas_por_andar[andar_atual]
+                        vigias_atuais = vigias_por_andar[andar_atual]
+
+                        tempo_ultima_escada = pygame.time.get_ticks()
+                        tempo_inicio_visao = pygame.time.get_ticks()
+
+                        mensagem_andar = TEXTOS_ANDARES[andar_atual]
+                        tempo_inicio_mensagem_andar = pygame.time.get_ticks()
+
+                        transicao_andar["fase"] = "entrada"
+                        transicao_andar["inicio"] = pygame.time.get_ticks()
+                        transicao_andar["alpha"] = 255
+
+                elif transicao_andar["fase"] == "entrada":
+                    transicao_andar["alpha"] = int(255 * (1 - progresso_transicao))
+
+                    if progresso_transicao >= 1:
+                        transicao_andar["fase"] = None
+                        transicao_andar["alpha"] = 0
+                        estado_jogo = "normal"
 
             if estado_jogo == "normal":
                 jogador.mover(
@@ -340,11 +399,13 @@ while rodando:
 
                     if verificar_colisao(jogador, patrulha):
                         sistema_vida.receber_dano()
+
                 for vigia in vigias_atuais:
                     vigia.atualizar(mapa_atual, jogador, jogador_colide_com_mapa)
 
                     if verificar_colisao(jogador, vigia):
                         sistema_vida.receber_dano()
+
                 tempo_atual = pygame.time.get_ticks()
 
                 if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
@@ -353,31 +414,28 @@ while rodando:
                         if andar_atual == boss_fernanda.andar and not boss_fernanda.derrotada:
                             estado_jogo = "dialogo_fernanda"
                             tempo_ultima_escada = tempo_atual
- 
+
                         elif andar_atual < len(mapas) - 1:
-                            andar_atual += 1
-                            mapa_atual = mapas[andar_atual]
+                            transicao_andar["fase"] = "saida"
+                            transicao_andar["inicio"] = pygame.time.get_ticks()
+                            transicao_andar["andar_destino"] = andar_atual + 1
+                            transicao_andar["tipo_spawn"] = "subida"
+                            transicao_andar["alpha"] = 0
 
-                            jogador.x, jogador.y = encontrar_posicao_inicial(mapa_atual)
-
+                            estado_jogo = "transicao_andar"
                             tempo_ultima_escada = tempo_atual
-                            tempo_inicio_visao = pygame.time.get_ticks()
-
-                            mensagem_andar = TEXTOS_ANDARES[andar_atual]
-                            tempo_inicio_mensagem_andar = pygame.time.get_ticks()
 
                     elif jogador_esta_na_escada_descida(mapa_atual, jogador):
                         if andar_atual > 0:
-                            andar_atual -= 1
-                            mapa_atual = mapas[andar_atual]
+                            transicao_andar["fase"] = "saida"
+                            transicao_andar["inicio"] = pygame.time.get_ticks()
+                            transicao_andar["andar_destino"] = andar_atual - 1
+                            transicao_andar["tipo_spawn"] = "descida"
+                            transicao_andar["alpha"] = 0
 
-                            jogador.x, jogador.y = encontrar_posicao_spawn_descida(mapa_atual)
-
+                            estado_jogo = "transicao_andar"
                             tempo_ultima_escada = tempo_atual
-                            tempo_inicio_visao = pygame.time.get_ticks()
 
-                            mensagem_andar = TEXTOS_ANDARES[andar_atual]
-                            tempo_inicio_mensagem_andar = pygame.time.get_ticks()
             elif estado_jogo == "dialogo_fernanda":
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
@@ -493,13 +551,20 @@ while rodando:
 
                 else:
                     mensagem_andar = None
-                    
+
             progresso_recarga_gpt = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT)
             progresso_recarga_gemini = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI)
+            
             inventario_modulo.desenhar_hud(tela, inventario, {
                 "logo_gpt": progresso_recarga_gpt,
                 "logo_gemini": progresso_recarga_gemini,
             })
+
+            if estado_jogo == "transicao_andar":
+                camada_transicao = pygame.Surface((largura, altura))
+                camada_transicao.fill((0, 0, 0))
+                camada_transicao.set_alpha(transicao_andar["alpha"])
+                tela.blit(camada_transicao, (0, 0))
 
             pygame.display.flip()
 
