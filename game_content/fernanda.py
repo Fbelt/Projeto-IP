@@ -46,7 +46,8 @@ CAMINHO_LOGO_CLAUDE = "imagens/logoclaude.png"
 
 FALAS_RECOMPENSA = [
     "Parabéns! Você passou no teste!",
-    "Aqui está! O Claude vai lhe ajudar no próximo andar."
+    "Aqui está! O Claude vai lhe ajudar no próximo andar.",
+    "Aperte 1 para usar o Claude e recuperar uma vida caso tenha perdido!"
 ]
 
 class BossFernanda:
