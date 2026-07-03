@@ -99,6 +99,19 @@ habilidade_claude_usada = False
 # habilidade do Gemini: invencibilidade temporária
 tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
 
+# instruções mostradas ao coletar cada IA ou chave
+TEXTOS_INSTRUCAO_HABILIDADE = {
+    "logo_claude": "Aperte 1 para recuperar vida!",
+    "logo_gpt": "Aperte 2 para revelar o mapa!",
+    "logo_gemini": "Aperte 3 para ficar invencivel!",
+    "chave_azul": "Porta azul desbloqueada!",
+    "chave_verde": "Porta verde desbloqueada!",
+    "chave_vermelha": "Portas vermelhas desbloqueadas!",
+}
+DURACAO_MENSAGEM_INSTRUCAO = 3000
+mensagem_instrucao = None
+tempo_inicio_mensagem_instrucao = 0
+
 estado_jogo = "normal"
 
 # textos da tela de game over
@@ -168,6 +181,7 @@ while rodando:
                 tempo_fim_habilidade_gpt = 0
                 habilidade_claude_usada = False
                 tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+                mensagem_instrucao = None
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -183,8 +197,9 @@ while rodando:
 
             pygame.display.flip()
 
-            if teclas[pygame.K_SPACE]:
-                rodando = False
+            for evento in eventos:
+                if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                    rodando = False
 
         # --- estado: jogo normal ---
         else:
@@ -398,6 +413,19 @@ while rodando:
 
                     if animacao is not None:
                         animacoes_revelacao_portas.append(animacao)
+
+                if item_coletado.tipo in TEXTOS_INSTRUCAO_HABILIDADE:
+                    mensagem_instrucao = TEXTOS_INSTRUCAO_HABILIDADE[item_coletado.tipo]
+                    tempo_inicio_mensagem_instrucao = pygame.time.get_ticks()
+
+            if mensagem_instrucao is not None:
+                if pygame.time.get_ticks() - tempo_inicio_mensagem_instrucao < DURACAO_MENSAGEM_INSTRUCAO:
+                    texto_instrucao = fonte2.render(mensagem_instrucao, True, (255, 255, 255))
+                    rect_instrucao = texto_instrucao.get_rect(center=(largura // 2, 40))
+                    pygame.draw.rect(tela, (0, 0, 0), rect_instrucao.inflate(20, 12))
+                    tela.blit(texto_instrucao, rect_instrucao)
+                else:
+                    mensagem_instrucao = None
 
             progresso_recarga_gpt = min(
                 1.0,
