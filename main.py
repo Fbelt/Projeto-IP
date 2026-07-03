@@ -1,6 +1,6 @@
 import pygame
 
-from game_content.personagens import jogador as Jogador
+from game_content.personagens import jogador as Jogador, InimigoPatrulha, InimigoVigia
 from game_content.visao import aplicar_visao, criar_animacao_revelacao_portas
 from game_content.batalha import verificar_colisao
 from game_content.mapa import (
@@ -11,13 +11,15 @@ from game_content.mapa import (
     jogador_colide_com_mapa,
     jogador_esta_na_escada_subida,
     jogador_esta_na_escada_descida,
-    encontrar_posicoes_patrulhas
+    encontrar_posicoes_patrulhas,
+    encontrar_posicoes_vigias
 )
 
 from game_content.sistema_vida import sistemavida, vidas_maximas
 from game_content import coletaveis as coletaveis_modulo
 from game_content import inventario as inventario_modulo
 from game_content.fernanda import BossFernanda
+from game_content.ricardo import ProfessorRicardo
 
 pygame.init()
 
@@ -50,15 +52,27 @@ for mapa in mapas:
     # Cria um inimigo de patrulha para cada 'V' encontrado
     # Alterna entre horizontal e vertical para dar variedade
     for i, (x_v, y_v) in enumerate(posicoes_v):
-        eixo = "horizontal" if i % 2 == 0 else "vertical"
-        # Importante: Se sua classe no personagens.py começar com maiúscula, use InimigoPatrulha
-        from game_content.personagens import InimigoPatrulha 
+        eixo = "horizontal" if i % 2 == 0 else "vertical" 
         lista_do_andar.append(InimigoPatrulha(x=x_v, y=y_v, direcao=eixo))
         
     patrulhas_por_andar.append(lista_do_andar)
 
+vigias_por_andar = []
+
+for mapa in mapas:
+    lista_do_andar = []
+    posicoes_g = encontrar_posicoes_vigias(mapa)
+
+    for x_g, y_g in posicoes_g:
+        lista_do_andar.append(InimigoVigia(x=x_g, y=y_g))
+
+    vigias_por_andar.append(lista_do_andar)
+
 # Boss Fernanda
 boss_fernanda = BossFernanda()
+
+# Professor Ricardo
+professor_ricardo = ProfessorRicardo()
 
 # Sistema de Vida
 sistema_vida = sistemavida()
@@ -126,6 +140,7 @@ while rodando:
     else:
         teclas = pygame.key.get_pressed()
         patrulhas_atuais = patrulhas_por_andar[andar_atual]
+        vigias_atuais = vigias_por_andar[andar_atual]
 
         # --- estado: jogador morreu ---
         if sistema_vida.fim_jogo:
@@ -148,6 +163,7 @@ while rodando:
                 animacoes_revelacao_portas = []
                 estado_jogo = "normal"
                 boss_fernanda = BossFernanda()
+                professor_ricardo = ProfessorRicardo()
                 tempo_ultimo_uso_habilidade_gpt = -coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
                 tempo_fim_habilidade_gpt = 0
                 habilidade_claude_usada = False
@@ -219,6 +235,26 @@ while rodando:
                 pygame.display.flip()
                 clock.tick(45)
                 continue
+
+            elif estado_jogo == "dialogo_ricardo":
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                        resultado_dialogo = professor_ricardo.avancar_dialogo()
+
+                        if resultado_dialogo == "vitoria":
+                            jogo_ganho = True
+                            estado_jogo = "normal"
+
+                        elif resultado_dialogo == "normal":
+                            estado_jogo = "normal"
+                            tempo_inicio_visao = pygame.time.get_ticks()
+
+                professor_ricardo.desenhar_tela_dialogo(tela)
+
+                pygame.display.flip()
+                clock.tick(45)
+                continue
+
             if estado_jogo == "normal":
                 jogador.mover(
                     teclas,
@@ -236,6 +272,11 @@ while rodando:
                         estado_jogo = "dialogo_fernanda"
 
                 for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_f:
+                        if professor_ricardo.esta_perto_do_jogador(jogador, andar_atual):
+                            professor_ricardo.iniciar_dialogo(inventario.completo())
+                            estado_jogo = "dialogo_ricardo"
+
                     if evento.type == pygame.KEYDOWN and evento.key in (pygame.K_1, pygame.K_KP1):
                         if inventario.tem_item("logo_claude") and not habilidade_claude_usada and sistema_vida.vidas < vidas_maximas:
                             sistema_vida.ganhar_vida()
@@ -262,7 +303,11 @@ while rodando:
 
                     if verificar_colisao(jogador, patrulha):
                         sistema_vida.receber_dano()
+                for vigia in vigias_atuais:
+                    vigia.atualizar(mapa_atual, jogador, jogador_colide_com_mapa)
 
+                    if verificar_colisao(jogador, vigia):
+                        sistema_vida.receber_dano()
                 tempo_atual = pygame.time.get_ticks()
 
                 if tempo_atual - tempo_ultima_escada > COOLDOWN_ESCADA:
@@ -280,9 +325,6 @@ while rodando:
 
                             tempo_ultima_escada = tempo_atual
                             tempo_inicio_visao = pygame.time.get_ticks()
-
-                            if inventario.completo():
-                                jogo_ganho = True
 
                     elif jogador_esta_na_escada_descida(mapa_atual, jogador):
                         if andar_atual > 0:
@@ -309,8 +351,13 @@ while rodando:
 
             for patrulha in patrulhas_atuais:
                 patrulha.desenhar(tela)
+            for vigia in vigias_atuais:
+                vigia.desenhar_campo_visao(tela)
 
+            for vigia in vigias_atuais:
+                vigia.desenhar(tela)
             boss_fernanda.desenhar(tela, andar_atual)
+            professor_ricardo.desenhar(tela, andar_atual)
 
             aplicar_visao(
                 tela,
@@ -321,13 +368,21 @@ while rodando:
                 animacoes_revelacao_portas,
                 revelar_tudo=pygame.time.get_ticks() < tempo_fim_habilidade_gpt
             )
+            if estado_jogo == "normal":
+                professor_ricardo.desenhar_mensagem_interacao(
+                    tela,
+                    jogador,
+                    andar_atual
+                )
             if estado_jogo == "dialogo_fernanda":
                 boss_fernanda.desenhar_dialogo(tela)
 
             jogador.desenhar(tela)
             sistema_vida.desenhar(tela)
+            item_coletado = None
 
-            item_coletado = coletaveis_modulo.atualizar_coletaveis(
+            if estado_jogo == "normal":
+                item_coletado = coletaveis_modulo.atualizar_coletaveis(
                                                                 tela,
                                                                 jogador,
                                                                 lista_coletaveis,
