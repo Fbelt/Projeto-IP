@@ -1,4 +1,5 @@
 import pygame
+import random
 
 from game_content.mapa import TAMANHO_TILE
 
@@ -24,6 +25,8 @@ COR_CAIXA_DIALOGO = (0, 0, 0)
 COR_BORDA_DIALOGO = (255, 255, 255)
 COR_TEXTO_DIALOGO = (255, 255, 255)
 
+QUANTIDADE_PERGUNTAS_QUIZ = 3
+
 QUESTOES_FERNANDA = [
     {
         "pergunta": "Qual estrutura é usada para repetir comandos enquanto uma condição for verdadeira?",
@@ -39,6 +42,51 @@ QUESTOES_FERNANDA = [
         "pergunta": "Qual tipo de dado representa valores verdadeiro ou falso?",
         "alternativas": ["str", "int", "float", "bool"],
         "correta": 3
+    },
+    {
+        "pergunta": "Qual operador é usado para comparar se dois valores são iguais?",
+        "alternativas": ["=", "==", "!=", "<="],
+        "correta": 1
+    },
+    {
+        "pergunta": "Qual estrutura é usada para tomar decisões no código?",
+        "alternativas": ["if", "while", "print", "input"],
+        "correta": 0
+    },
+    {
+        "pergunta": "Qual comando é usado para mostrar uma mensagem na tela em Python?",
+        "alternativas": ["input", "show", "print", "return"],
+        "correta": 2
+    },
+    {
+        "pergunta": "Qual função pode ser usada para receber uma entrada do usuário?",
+        "alternativas": ["input", "print", "len", "range"],
+        "correta": 0
+    },
+    {
+        "pergunta": "Qual tipo de dado é usado para armazenar texto?",
+        "alternativas": ["int", "float", "str", "bool"],
+        "correta": 2
+    },
+    {
+        "pergunta": "Qual estrutura é usada para percorrer uma sequência de valores?",
+        "alternativas": ["for", "if", "def", "else"],
+        "correta": 0
+    },
+    {
+        "pergunta": "Qual palavra-chave é usada para retornar um valor de uma função?",
+        "alternativas": ["break", "return", "continue", "import"],
+        "correta": 1
+    },
+    {
+        "pergunta": "Qual função retorna a quantidade de elementos de uma lista?",
+        "alternativas": ["range", "len", "int", "list"],
+        "correta": 1
+    },
+    {
+        "pergunta": "Qual símbolo é usado para iniciar um comentário em Python?",
+        "alternativas": ["//", "#", "/*", "--"],
+        "correta": 1
     }
 ]
 
@@ -63,6 +111,7 @@ class BossFernanda:
         self.derrotada = False
         self.dialogo_inicial_mostrado = False
 
+        self.questoes_atuais = []
         self.questao_atual = 0
         self.acertos = 0
         self.alternativa_escolhida = None
@@ -129,6 +178,10 @@ class BossFernanda:
         self.dialogo_inicial_mostrado = True
 
     def iniciar_quiz(self):
+        quantidade = min(QUANTIDADE_PERGUNTAS_QUIZ, len(QUESTOES_FERNANDA))
+
+        self.questoes_atuais = random.sample(QUESTOES_FERNANDA, quantidade)
+
         self.questao_atual = 0
         self.acertos = 0
         self.alternativa_escolhida = None
@@ -207,7 +260,7 @@ class BossFernanda:
         if self.alternativa_escolhida is not None:
             return None
 
-        pergunta = QUESTOES_FERNANDA[self.questao_atual]
+        pergunta = self.questoes_atuais[self.questao_atual]
 
         self.alternativa_escolhida = indice_alternativa
         self.ultima_resposta_correta = indice_alternativa == pergunta["correta"]
@@ -229,7 +282,7 @@ class BossFernanda:
             return None
 
         if self.ultima_resposta_correta:
-            if self.acertos >= len(QUESTOES_FERNANDA):
+            if self.acertos >= len(self.questoes_atuais):
                 return "aprovado"
 
             self.questao_atual += 1
@@ -261,7 +314,10 @@ class BossFernanda:
 
         sistema_vida.desenhar(tela)
 
-        pergunta = QUESTOES_FERNANDA[self.questao_atual]
+        if not self.questoes_atuais:
+            self.iniciar_quiz()
+
+        pergunta = self.questoes_atuais[self.questao_atual]
 
         # quadro-negro com a pergunta
         quadro = pygame.Rect(330, 95, 800, 170)
@@ -298,7 +354,11 @@ class BossFernanda:
             superficie = fonte_alternativa.render(texto_alternativa, True, cor_texto)
             tela.blit(superficie, (card.x + 20, card.centery - superficie.get_height() // 2))
 
-        progresso = fonte_instrucao.render(f"Acertos: {self.acertos}/3", True, (255, 255, 255))
+        progresso = fonte_instrucao.render(
+                f"Acertos: {self.acertos}/{len(self.questoes_atuais)}",
+                True,
+                (255, 255, 255)
+            )
         tela.blit(progresso, (360, 655))
 
         if self.mensagem_feedback:

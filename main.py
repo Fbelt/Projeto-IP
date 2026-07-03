@@ -139,6 +139,22 @@ transicao_andar = {
     "tipo_spawn": None,
     "alpha": 0
 }
+# transições da Fernanda
+DURACAO_TRANSICAO_FERNANDA = 1200
+
+transicao_fernanda = {
+    "inicio": 0,
+    "texto": "",
+    "proximo_estado": "normal",
+    "acao": None
+}
+
+
+def iniciar_transicao_fernanda(texto, proximo_estado, acao=None):
+    transicao_fernanda["inicio"] = pygame.time.get_ticks()
+    transicao_fernanda["texto"] = texto
+    transicao_fernanda["proximo_estado"] = proximo_estado
+    transicao_fernanda["acao"] = acao
 
 estado_jogo = "normal"
 
@@ -222,7 +238,7 @@ while rodando:
                     "tipo_spawn": None,
                     "alpha": 0
                 }
-
+        
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
             tela.fill((0, 0, 0))
@@ -243,7 +259,52 @@ while rodando:
 
         # --- estado: jogo normal ---
         else:
-            if estado_jogo == "quiz_fernanda":
+            if estado_jogo == "transicao_fernanda":
+                tempo_passado = pygame.time.get_ticks() - transicao_fernanda["inicio"]
+                progresso = tempo_passado / DURACAO_TRANSICAO_FERNANDA
+
+                if progresso > 1:
+                    progresso = 1
+
+                tela.fill((0, 0, 0))
+
+                if progresso < 0.5:
+                    alpha_texto = int(255 * (progresso / 0.5))
+                else:
+                    alpha_texto = int(255 * ((1 - progresso) / 0.5))
+
+                if alpha_texto < 0:
+                    alpha_texto = 0
+
+                texto_transicao = fonte.render(
+                    transicao_fernanda["texto"],
+                    True,
+                    (255, 255, 255)
+                )
+
+                texto_transicao.set_alpha(alpha_texto)
+
+                rect_texto = texto_transicao.get_rect(
+                    center=(largura // 2, altura // 2)
+                )
+
+                tela.blit(texto_transicao, rect_texto)
+
+                pygame.display.flip()
+                clock.tick(45)
+
+                if tempo_passado >= DURACAO_TRANSICAO_FERNANDA:
+                    if transicao_fernanda["acao"] == "iniciar_quiz":
+                        boss_fernanda.marcar_dialogo_inicial_mostrado()
+                        boss_fernanda.iniciar_quiz()
+
+                    elif transicao_fernanda["acao"] == "iniciar_recompensa":
+                        boss_fernanda.iniciar_recompensa()
+
+                    estado_jogo = transicao_fernanda["proximo_estado"]
+
+                continue
+            elif estado_jogo == "quiz_fernanda":
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN:
                         if evento.key == pygame.K_1 or evento.key == pygame.K_KP1:
@@ -262,8 +323,13 @@ while rodando:
                             resultado_quiz = boss_fernanda.avancar_feedback_quiz()
 
                             if resultado_quiz == "aprovado":
-                                boss_fernanda.iniciar_recompensa()
-                                estado_jogo = "recompensa_fernanda"
+                                iniciar_transicao_fernanda(
+                                    "TESTE CONCLUIDO!",
+                                    "recompensa_fernanda",
+                                    "iniciar_recompensa"
+                                )
+
+                                estado_jogo = "transicao_fernanda"
 
                 boss_fernanda.desenhar_tela_quiz(tela, sistema_vida)
 
@@ -365,7 +431,12 @@ while rodando:
 
                 if boss_fernanda.esta_perto_do_jogador(jogador, andar_atual):
                     if not boss_fernanda.dialogo_inicial_mostrado:
-                        estado_jogo = "dialogo_fernanda"
+                        iniciar_transicao_fernanda(
+                            "PROF. FERNANDA",
+                            "dialogo_fernanda"
+                        )
+
+                        estado_jogo = "transicao_fernanda"
 
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_f:
@@ -439,9 +510,13 @@ while rodando:
             elif estado_jogo == "dialogo_fernanda":
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
-                        boss_fernanda.marcar_dialogo_inicial_mostrado()
-                        boss_fernanda.iniciar_quiz()
-                        estado_jogo = "quiz_fernanda"
+                        iniciar_transicao_fernanda(
+                            "PROVA DE IP",
+                            "quiz_fernanda",
+                            "iniciar_quiz"
+                        )
+
+                        estado_jogo = "transicao_fernanda"
             tela.fill((0, 0, 0))
 
             desenhar_mapa(tela, mapa_atual)
@@ -471,6 +546,7 @@ while rodando:
             )
             if estado_jogo == "normal":
                 professor_ricardo.desenhar_mensagem_interacao(tela, jogador, andar_atual)
+
             if estado_jogo == "dialogo_fernanda":
                 boss_fernanda.desenhar_dialogo(tela)
 
