@@ -65,7 +65,13 @@ Não foram utilizadas bibliotecas externas além do Pygame — os mapas dos trê
 
 ## Conceitos apresentados na disciplina e onde eles foram usados
 
-> TEXTO
+Em geral todos os conceitos e comandos mais básicos apresentados na disiplina foram utilizados.
+- condicionais: O uso de condicionais foi usado por todo o código, principalmente para a validação de qualquer acontecimento no jogo, como dano e movimentação.
+- loops : Os loops foram essencias para o funcionamento do jogo, com destaque ao loop "while rodando" que permite que o jogo continue em funcionamento até ele acabar.
+- listas : O uso de listas foi importante para armazenar e fazer funcionar de forma mais efetiva coisa que eram mutiplas no jogo, como no caso dos vilões, texturas e animações
+- Funções : O uso de função foi essencial para programar os personagens, e todas as verificações realizadas pelo jogo, esse recurso foi majoritariamente usado dentro de POOs, e serviu para que o personagem tivesse suas caractristicas e para verificar coisas como colisões, coletas, perda e ganho de vida e etc.
+- Dicionários : Os dicionários foram muito utilizados para armazenar intens que tiveram o acesso facilitado por causa de sua organização, logo todas as imagens, coletáveis, ou coisas grandes e que não são utilizadas 100% do tempo foram armazenadas em dicionários, como as perguntas do quiz.
+- tuplas : As tuplas foram utilizadas para armazenar coisas mais fixas e que não precisariam ser mudadas, como por exemplo as definições de cores em RGB que eram definidas em tuplas e não eram alteradas.
 
 ## Desafios e Erros Durante o Projeto
 
