@@ -244,7 +244,7 @@ while rodando:
             tela.fill((0, 0, 0))
 
             texto_ganhou = fonte.render("VOCÊ GANHOU!", True, (0, 255, 0))
-            texto_sub = fonte2.render("Você encontrou a IA no CIN!", True, (255, 255, 255))
+            texto_sub = fonte2.render("Você construiu a IA suprema no CiN!", True, (255, 255, 255))
             texto_sair = fonte3.render("Pressione ESPAÇO para sair", True, (255, 255, 255))
 
             tela.blit(texto_ganhou, (largura // 2 - texto_ganhou.get_width() // 2, altura // 2 - 100))
