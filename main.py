@@ -1,7 +1,12 @@
 import pygame
 
 from game_content.personagens import jogador as Jogador, InimigoPatrulha, InimigoVigia
-from game_content.visao import aplicar_visao, criar_animacao_revelacao_portas
+from game_content.visao import (
+    aplicar_visao,
+    criar_animacao_revelacao_portas,
+    TEMPO_MAPA_VISIVEL,
+    TEMPO_FECHAMENTO_VISAO
+)
 from game_content.batalha import verificar_colisao
 from game_content.mapa import (
     mapas,
@@ -108,9 +113,21 @@ TEXTOS_INSTRUCAO_HABILIDADE = {
     "chave_verde": "Porta verde desbloqueada!",
     "chave_vermelha": "Portas vermelhas desbloqueadas!",
 }
+
 DURACAO_MENSAGEM_INSTRUCAO = 3000
 mensagem_instrucao = None
 tempo_inicio_mensagem_instrucao = 0
+
+# mensagem mostrada ao entrar em cada andar
+TEXTOS_ANDARES = {
+    0: "1º ANDAR DO CIN",
+    1: "2º ANDAR DO CIN",
+    2: "3º ANDAR DO CIN",
+}
+
+DURACAO_MENSAGEM_ANDAR = 2000
+mensagem_andar = None
+tempo_inicio_mensagem_andar = 0
 
 estado_jogo = "normal"
 
@@ -150,6 +167,9 @@ while rodando:
             tela_de_inicio = False
             tempo_inicio_visao = pygame.time.get_ticks()
 
+            mensagem_andar = TEXTOS_ANDARES[andar_atual]
+            tempo_inicio_mensagem_andar = pygame.time.get_ticks()
+
     else:
         teclas = pygame.key.get_pressed()
         patrulhas_atuais = patrulhas_por_andar[andar_atual]
@@ -182,6 +202,8 @@ while rodando:
                 habilidade_claude_usada = False
                 tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
                 mensagem_instrucao = None
+                mensagem_andar = TEXTOS_ANDARES[andar_atual]
+                tempo_inicio_mensagem_andar = pygame.time.get_ticks()
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -341,6 +363,9 @@ while rodando:
                             tempo_ultima_escada = tempo_atual
                             tempo_inicio_visao = pygame.time.get_ticks()
 
+                            mensagem_andar = TEXTOS_ANDARES[andar_atual]
+                            tempo_inicio_mensagem_andar = pygame.time.get_ticks()
+
                     elif jogador_esta_na_escada_descida(mapa_atual, jogador):
                         if andar_atual > 0:
                             andar_atual -= 1
@@ -350,6 +375,9 @@ while rodando:
 
                             tempo_ultima_escada = tempo_atual
                             tempo_inicio_visao = pygame.time.get_ticks()
+
+                            mensagem_andar = TEXTOS_ANDARES[andar_atual]
+                            tempo_inicio_mensagem_andar = pygame.time.get_ticks()
             elif estado_jogo == "dialogo_fernanda":
                 for evento in eventos:
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
@@ -423,6 +451,49 @@ while rodando:
                 else:
                     mensagem_instrucao = None
 
+            if mensagem_andar is not None:
+                tempo_passado_andar = pygame.time.get_ticks() - tempo_inicio_mensagem_andar
+
+                if tempo_passado_andar < DURACAO_MENSAGEM_ANDAR:
+                    if tempo_passado_andar <= TEMPO_MAPA_VISIVEL:
+                        alpha_andar = 255
+                    else:
+                        tempo_fade = tempo_passado_andar - TEMPO_MAPA_VISIVEL
+                        progresso_fade = tempo_fade / TEMPO_FECHAMENTO_VISAO
+
+                        if progresso_fade > 1:
+                            progresso_fade = 1
+
+                        alpha_andar = int(255 * (1 - progresso_fade))
+
+                    texto_andar = fonte.render(mensagem_andar, True, (255, 255, 255))
+                    rect_andar = texto_andar.get_rect(center=(largura // 2, altura // 2))
+
+                    caixa_andar = rect_andar.inflate(30, 18)
+
+                    superficie_andar = pygame.Surface(caixa_andar.size, pygame.SRCALPHA)
+
+                    pygame.draw.rect(
+                        superficie_andar,
+                        (0, 0, 0, alpha_andar),
+                        superficie_andar.get_rect()
+                    )
+
+                    pygame.draw.rect(
+                        superficie_andar,
+                        (255, 255, 255, alpha_andar),
+                        superficie_andar.get_rect(),
+                        3
+                    )
+
+                    texto_andar.set_alpha(alpha_andar)
+
+                    tela.blit(superficie_andar, caixa_andar)
+                    tela.blit(texto_andar, rect_andar)
+
+                else:
+                    mensagem_andar = None
+                    
             progresso_recarga_gpt = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT)
             progresso_recarga_gemini = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI)
             inventario_modulo.desenhar_hud(tela, inventario, {
