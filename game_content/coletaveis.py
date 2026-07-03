@@ -6,9 +6,10 @@ PROXIMIDADE = 50
 DIST_MINIMA_ENTRE_ITENS = 80
 TAMANHO_SPRITE = 20  
 VELOCIDADE_BUFF_GPT = 7
-DURACAO_INVENCIBILIDADE_CLAUDE = 15000
 DURACAO_HABILIDADE_GPT = 3000
 COOLDOWN_HABILIDADE_GPT = 30000
+DURACAO_HABILIDADE_GEMINI = 3000
+COOLDOWN_HABILIDADE_GEMINI = 45000
 
 _fonte_mensagem = None
 
@@ -56,7 +57,6 @@ PONTOS_SPAWN_COLETAVEIS = {
     ],
 
     "chave_vermelha": [
-        (2, 7, 23),
         (2, 28, 46),
         (2, 25, 15),
     ],
@@ -132,9 +132,6 @@ def aplicar_buff(tipo, player, sistema_vida):
 
     elif tipo == "logo_gemini":
         sistema_vida.ganhar_vida()
-
-    elif tipo == "logo_claude":
-        sistema_vida.ativar_invencibilidade_buff(DURACAO_INVENCIBILIDADE_CLAUDE)
 
 
 

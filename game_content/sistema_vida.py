@@ -94,9 +94,19 @@ class sistemavida:
                 desenhar_coracao_vazio(tela, x, y, tamanho_coracao)
 
         tempo_atual = pygame.time.get_ticks()
-        invencivel = (tempo_atual - self.tempo_ultimo_dano) < tempo_invencivel_pos_dano
-        if invencivel and not self.fim_jogo:
+        invencivel_dano = (tempo_atual - self.tempo_ultimo_dano) < tempo_invencivel_pos_dano
+        invencivel_buff = self.esta_invencivel_por_buff()
+
+        if (invencivel_dano or invencivel_buff) and not self.fim_jogo:
+            tempo_restante_dano = tempo_invencivel_pos_dano - (tempo_atual - self.tempo_ultimo_dano)
+            tempo_restante_buff = self.tempo_fim_invencibilidade_buff - tempo_atual
+
+            tempo_restante_ms = max(
+                tempo_restante_dano if invencivel_dano else 0,
+                tempo_restante_buff if invencivel_buff else 0
+            )
+
             fonte = pygame.font.SysFont(None, 20)
-            resto = (tempo_invencivel_pos_dano - (tempo_atual - self.tempo_ultimo_dano)) // 1000 + 1
+            resto = tempo_restante_ms // 1000 + 1
             texto = fonte.render(f'Invencivel: {resto}s', True, (255, 215, 0))
             tela.blit(texto, (espacamento_coracao, espacamento_coracao + tamanho_coracao + 5))

@@ -101,8 +101,11 @@ class Inventario:
         return self.quantidade_total() >= TOTAL_COLETAVEIS
 
 
-def desenhar_hud(tela, inventario, progresso_recarga_gpt=None):
+def desenhar_hud(tela, inventario, progresso_recarga=None):
     carregar_icones()
+
+    if progresso_recarga is None:
+        progresso_recarga = {}
 
     tamanho_com_borda = TAMANHO_ICONE + ESPESSURA_CONTORNO * 2
     largura_tela = tela.get_width()
@@ -117,18 +120,15 @@ def desenhar_hud(tela, inventario, progresso_recarga_gpt=None):
         y = MARGEM
 
         if inventario.tem_item(tipo):
-            em_recarga = (
-                tipo == "logo_gpt"
-                and progresso_recarga_gpt is not None
-                and progresso_recarga_gpt < 1
-            )
+            progresso = progresso_recarga.get(tipo)
+            em_recarga = progresso is not None and progresso < 1
 
             if em_recarga:
                 tela.blit(_imagens_silhueta[tipo], (x, y))
 
                 icone_colorido = _imagens_coloridas[tipo]
                 altura_icone = icone_colorido.get_height()
-                altura_preenchida = int(altura_icone * progresso_recarga_gpt)
+                altura_preenchida = int(altura_icone * progresso)
 
                 if altura_preenchida > 0:
                     origem_y = altura_icone - altura_preenchida

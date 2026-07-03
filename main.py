@@ -82,6 +82,9 @@ tempo_fim_habilidade_gpt = 0
 # habilidade do Claude: recupera 1 vida, uso único
 habilidade_claude_usada = False
 
+# habilidade do Gemini: invencibilidade temporária
+tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+
 estado_jogo = "normal"
 
 # textos da tela de game over
@@ -148,6 +151,7 @@ while rodando:
                 tempo_ultimo_uso_habilidade_gpt = -coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
                 tempo_fim_habilidade_gpt = 0
                 habilidade_claude_usada = False
+                tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -245,6 +249,14 @@ while rodando:
                             tempo_ultimo_uso_habilidade_gpt = agora
                             tempo_fim_habilidade_gpt = agora + coletaveis_modulo.DURACAO_HABILIDADE_GPT
 
+                    if evento.type == pygame.KEYDOWN and evento.key in (pygame.K_3, pygame.K_KP3):
+                        agora = pygame.time.get_ticks()
+                        cooldown_liberado_gemini = agora - tempo_ultimo_uso_habilidade_gemini >= coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+
+                        if inventario.tem_item("logo_gemini") and cooldown_liberado_gemini:
+                            tempo_ultimo_uso_habilidade_gemini = agora
+                            sistema_vida.ativar_invencibilidade_buff(coletaveis_modulo.DURACAO_HABILIDADE_GEMINI)
+
                 for patrulha in patrulhas_atuais:
                     patrulha.mover(mapa_atual, jogador_colide_com_mapa)
 
@@ -336,7 +348,14 @@ while rodando:
                 1.0,
                 (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
             )
-            inventario_modulo.desenhar_hud(tela, inventario, progresso_recarga_gpt)
+            progresso_recarga_gemini = min(
+                1.0,
+                (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+            )
+            inventario_modulo.desenhar_hud(tela, inventario, {
+                "logo_gpt": progresso_recarga_gpt,
+                "logo_gemini": progresso_recarga_gemini,
+            })
 
             pygame.display.flip()
 
