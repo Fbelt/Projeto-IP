@@ -384,11 +384,7 @@ while rodando:
                 revelar_tudo=pygame.time.get_ticks() < tempo_fim_habilidade_gpt
             )
             if estado_jogo == "normal":
-                professor_ricardo.desenhar_mensagem_interacao(
-                    tela,
-                    jogador,
-                    andar_atual
-                )
+                professor_ricardo.desenhar_mensagem_interacao(tela, jogador, andar_atual)
             if estado_jogo == "dialogo_fernanda":
                 boss_fernanda.desenhar_dialogo(tela)
 
@@ -427,14 +423,8 @@ while rodando:
                 else:
                     mensagem_instrucao = None
 
-            progresso_recarga_gpt = min(
-                1.0,
-                (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
-            )
-            progresso_recarga_gemini = min(
-                1.0,
-                (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
-            )
+            progresso_recarga_gpt = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT)
+            progresso_recarga_gemini = min(1.0, (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI)
             inventario_modulo.desenhar_hud(tela, inventario, {
                 "logo_gpt": progresso_recarga_gpt,
                 "logo_gemini": progresso_recarga_gemini,

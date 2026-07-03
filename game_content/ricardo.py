@@ -49,16 +49,8 @@ class ProfessorRicardo:
         self.rect = self.criar_rect()
 
         imagem_original = pygame.image.load(CAMINHO_SPRITE_RICARDO).convert_alpha()
-
-        self.imagem = pygame.transform.smoothscale(
-            imagem_original,
-            (self.rect.width, self.rect.height)
-        )
-
-        self.imagem_dialogo = pygame.transform.smoothscale(
-            imagem_original,
-            (230, 360)
-        )
+        self.imagem = pygame.transform.smoothscale(imagem_original, (self.rect.width, self.rect.height))
+        self.imagem_dialogo = pygame.transform.smoothscale(imagem_original, (230, 360))
 
     def criar_rect(self):
         x = self.coluna * TAMANHO_TILE
@@ -70,12 +62,7 @@ class ProfessorRicardo:
         return pygame.Rect(x, y, largura, altura)
 
     def obter_rect_personagem(self, personagem):
-        return pygame.Rect(
-            personagem.x,
-            personagem.y,
-            personagem.largura,
-            personagem.altura
-        )
+        return pygame.Rect(personagem.x, personagem.y, personagem.largura, personagem.altura)
 
     def desenhar(self, tela, andar_atual):
         if andar_atual != self.andar:
@@ -88,11 +75,7 @@ class ProfessorRicardo:
             return False
 
         rect_jogador = self.obter_rect_personagem(jogador)
-
-        area_interacao = self.rect.inflate(
-            DISTANCIA_INTERACAO,
-            DISTANCIA_INTERACAO
-        )
+        area_interacao = self.rect.inflate(DISTANCIA_INTERACAO, DISTANCIA_INTERACAO)
 
         return area_interacao.colliderect(rect_jogador)
 
@@ -101,19 +84,10 @@ class ProfessorRicardo:
             return
 
         fonte = pygame.font.SysFont(None, 26)
-
-        texto = fonte.render(
-            TEXTO_INTERACAO_RICARDO,
-            True,
-            COR_TEXTO_MENSAGEM
-        )
+        texto = fonte.render(TEXTO_INTERACAO_RICARDO, True, COR_TEXTO_MENSAGEM)
 
         caixa = texto.get_rect()
-        caixa.midbottom = (
-            self.rect.centerx,
-            self.rect.top - 10
-        )
-
+        caixa.midbottom = (self.rect.centerx, self.rect.top - 10)
         caixa = caixa.inflate(14, 8)
 
         if caixa.left < 10:
@@ -190,19 +164,9 @@ class ProfessorRicardo:
         fonte_instrucao = pygame.font.SysFont(None, 24)
 
         titulo = fonte_titulo.render("Professor Ricardo Massa", True, (255, 255, 255))
+        tela.blit(titulo, (largura_tela // 2 - titulo.get_width() // 2, 40))
 
-        tela.blit(
-            titulo,
-            (
-                largura_tela // 2 - titulo.get_width() // 2,
-                40
-            )
-        )
-
-        rect_ricardo = self.imagem_dialogo.get_rect(
-            center=(largura_tela // 2, altura_tela // 2 - 20)
-        )
-
+        rect_ricardo = self.imagem_dialogo.get_rect(center=(largura_tela // 2, altura_tela // 2 - 20))
         tela.blit(self.imagem_dialogo, rect_ricardo)
 
         caixa = pygame.Rect(130, altura_tela - 175, largura_tela - 260, 120)
@@ -211,28 +175,7 @@ class ProfessorRicardo:
         pygame.draw.rect(tela, (255, 255, 255), caixa, 3)
 
         fala = self.falas_atuais[self.indice_fala]
+        self.desenhar_texto_quebrado(tela, fala, fonte_fala, (255, 255, 255), caixa.x + 20, caixa.y + 22, caixa.width - 40, 34)
 
-        self.desenhar_texto_quebrado(
-            tela,
-            fala,
-            fonte_fala,
-            (255, 255, 255),
-            caixa.x + 20,
-            caixa.y + 22,
-            caixa.width - 40,
-            34
-        )
-
-        instrucao = fonte_instrucao.render(
-            "Pressione ESPAÇO para continuar",
-            True,
-            (255, 255, 255)
-        )
-
-        tela.blit(
-            instrucao,
-            (
-                largura_tela // 2 - instrucao.get_width() // 2,
-                altura_tela - 38
-            )
-        )
+        instrucao = fonte_instrucao.render("Pressione ESPAÇO para continuar", True, (255, 255, 255))
+        tela.blit(instrucao, (largura_tela // 2 - instrucao.get_width() // 2, altura_tela - 38))

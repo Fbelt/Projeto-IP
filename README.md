@@ -2,7 +2,7 @@
 
 ## Integrantes da Equipe 3
 
-- Clecio Henrique `chmm`
+- Clécio Henrique `chmm`
 - Felipe Belfort `fbt3`
 - Gabriel Costa `gcrs`
 - Lucas Guerra `lgp`
@@ -11,25 +11,45 @@
 
 ## Arquitetura/Organização do Projeto
 
+```
+Projeto-IP/
+├── main.py                 # Loop principal do jogo: estados, eventos e renderização
+├── README.md
+│
+├── game_content/
+│   ├── personagens.py       # Classes Jogador, InimigoPatrulha e InimigoVigia
+│   ├── mapa.py               # Matrizes dos 3 andares, colisão e portas trancadas
+│   ├── coletaveis.py         # Sorteio/coleta das chaves e IAs e seus buffs/habilidades
+│   ├── inventario.py         # Itens coletados e HUD do inventário
+│   ├── sistema_vida.py       # Vidas, dano e invencibilidade
+│   ├── visao.py               # Neblina de guerra / campo de visão do jogador
+│   ├── batalha.py             # Detecção de colisão entre jogador e inimigos
+│   ├── fernanda.py            # Boss e quiz da professora Fernanda
+│   └── ricardo.py             # Interação com o professor Ricardo e condição de vitória
+│
+├── imagens/                 # Sprites dos personagens, ícones e texturas do mapa
+└── fontes/                  # Fontes pixeladas usadas na interface (PixelOperator, PressStart2P)
+```
+
 ### Explicando o jogo
 
-O jogo se baseia em um labirinto divido em 3 andares (Representando o período da faculdade), em que um estudante (Personagem controlado pelo jogador) precisa coletar 3 inteligências artificiais, em que cada uma delas fornece um poder extra para o jogador, e 3 chaves para conseguir passar do labirinto (Representando a conclusão do período). Dentro desse labirinto temos os monitores (Personagem que segue o jogador pelo labirinto), em que caso o estudante seja pego pelo monitor ele perde uma de suas 3 vidas. O jogo se encerra ou quando o estudante conseguir coletar as 3 IAs e as 3 chaves ou quando o estudante for pego 3 vezes pelo monitor.
+O jogo se baseia em um labirinto dividido em 3 andares (representando o período da faculdade), em que um estudante (o personagem controlado pelo jogador) precisa coletar 3 inteligências artificiais, cada uma dando um poder extra pro jogador, e 3 chaves pra destrancar as portas e conseguir avançar pelo labirinto. Dentro desse labirinto tem os monitores: uns ficam patrulhando de um lado pro outro, e outros vigiam uma área e partem pra cima do jogador se ele entrar no campo de visão deles — em qualquer um dos dois casos, se o estudante for pego, ele perde uma de suas 3 vidas. Também tem a professora Fernanda, que aparece no caminho e só libera a passagem depois de um quiz, e o professor Ricardo, que fica no último andar: é falando com ele, já com as 3 IAs e as 3 chaves no inventário, que o jogo é vencido de fato. Se o estudante for pego 3 vezes pelos monitores, o jogo acaba em derrota.
 
 ### Organização do código
 
 O código do nosso jogo foi dividido em 9 partes:
 
-- **Sistema de Batalha**: Responsável por verificar se o estudante foi pego pelo monitor e caso ele seja pego sofra um KnockBack.
+- **Sistema de Batalha**: Responsável por verificar se o estudante encostou em algum monitor. Na primeira versão isso também empurrava o personagem pra longe (KnockBack), mas essa parte acabou sendo removida — o motivo tá contado lá em baixo, em "Desafios e Erros Durante o Projeto".
 - **Sistema de Vida**: Responsável pelo controle de quantas vidas o jogador possui, pela limitação do limite de vidas e pela invencibilidade de 3 segundos depois de ser pego pelo monitor.
 - **Sistema de Visão**: Responsável por impedir que o jogador consiga ver o mapa todo o tempo todo, uma vez que por ser um labirinto não faz sentido a pessoa conseguir ver o mapa todo o tempo inteiro.
-- **Personagens**: Responsável pela criação do personagem controlado pelo jogador, pela criação do inimigo e pela movimentação dos personagens.
+- **Personagens**: Responsável pela criação do personagem controlado pelo jogador, dos monitores (o de patrulha e o vigia) e pela movimentação de todos eles.
 - **Coletáveis**: Responsável pela criação dos itens que precisam ser adquiridos pelo jogador.
   - **Chave Azul**: Desbloqueia a porta de acesso ao ChatGPT.
   - **Chave Verde**: Desbloqueia a porta onde Fernanda fica
-  - **Chave Vermelha**: Desbloqueia a porta de acesso ao Gemini e a porta onde Ricardo Massa fica
-  - **ChatGPT**: Ao coletar o ChatGPT o jogador ganha a habilidade de revelar o mapa por 3 segundos ao apertar 2.
-  - **Claude**: Ao coletar o Calude, caso o jogador tenha sido pego pelo monitor pelo menos uma vez, ele recupera uma vida. Não podendo ultrapassar o limite de 3 vidas.
-  - **Gemini**: Ao coletar o Calude o jogador consegue uma invencibilidade durante 3 segundos.
+  - **Chave Vermelha**: Desbloqueia a porta de acesso ao Gemini e a porta onde Ricardo fica
+  - **ChatGPT**: assim que é coletado, a velocidade do jogador já aumenta. Além disso, dá pra apertar 2 pra revelar o mapa inteiro por 3 segundos, com 30 segundos de espera entre um uso e outro.
+  - **Claude**: ao coletar, libera a habilidade de recuperar 1 vida apertando 1 — só funciona se o jogador já tiver perdido alguma vida, e só pode ser usada uma vez o jogo inteiro.
+  - **Gemini**: recupera uma vida na hora que é coletado (respeitando o limite de 3) e ainda libera 3 segundos de invencibilidade apertando 3, com 45 segundos de cooldown.
 - **Fernanda**: Responsável pelo controle de interação com a professora Fernanda
 - **Ricardo**: Responsável pelo controle de interação com o professor Ricardo
 - **Inventario**: Responsável pelo armazenamento da informação de quais itens já foram pegos pelo jogador.
@@ -37,7 +57,7 @@ O código do nosso jogo foi dividido em 9 partes:
 
 ## Divisão do Trabalho
 
-- **Clecio**: Mapa
+- **Clécio**: Mapa
 - **Felipe**: Identidade Visual e Solução de Problemas
 - **Gabriel**: Sistema de vida e Relatório
 - **Lucas Guerra**: Personagens
@@ -66,12 +86,13 @@ Não foram utilizadas bibliotecas externas além do Pygame — os mapas dos trê
 ## Conceitos apresentados na disciplina e onde eles foram usados
 
 Em geral todos os conceitos e comandos mais básicos apresentados na disiplina foram utilizados.
-- condicionais: O uso de condicionais foi usado por todo o código, principalmente para a validação de qualquer acontecimento no jogo, como dano e movimentação.
-- loops : Os loops foram essencias para o funcionamento do jogo, com destaque ao loop "while rodando" que permite que o jogo continue em funcionamento até ele acabar.
-- listas : O uso de listas foi importante para armazenar e fazer funcionar de forma mais efetiva coisa que eram mutiplas no jogo, como no caso dos vilões, texturas e animações
-- Funções : O uso de função foi essencial para programar os personagens, e todas as verificações realizadas pelo jogo, esse recurso foi majoritariamente usado dentro de POOs, e serviu para que o personagem tivesse suas caractristicas e para verificar coisas como colisões, coletas, perda e ganho de vida e etc.
-- Dicionários : Os dicionários foram muito utilizados para armazenar intens que tiveram o acesso facilitado por causa de sua organização, logo todas as imagens, coletáveis, ou coisas grandes e que não são utilizadas 100% do tempo foram armazenadas em dicionários, como as perguntas do quiz.
-- tuplas : As tuplas foram utilizadas para armazenar coisas mais fixas e que não precisariam ser mudadas, como por exemplo as definições de cores em RGB que eram definidas em tuplas e não eram alteradas.
+
+- **Condicionais**: O uso de condicionais foi usado por todo o código, principalmente para a validação de qualquer acontecimento no jogo, como dano e movimentação.
+- **Loops**: Os loops foram essencias para o funcionamento do jogo, com destaque ao loop "while rodando" que permite que o jogo continue em funcionamento até ele acabar.
+- **Listas**: O uso de listas foi importante para armazenar e fazer funcionar de forma mais efetiva coisa que eram mutiplas no jogo, como no caso dos vilões, texturas e animações.
+- **Funções**: O uso de função foi essencial para programar os personagens, e todas as verificações realizadas pelo jogo, esse recurso foi majoritariamente usado dentro de POOs, e serviu para que o personagem tivesse suas caractristicas e para verificar coisas como colisões, coletas, perda e ganho de vida e etc.
+- **Dicionários**: Os dicionários foram muito utilizados para armazenar intens que tiveram o acesso facilitado por causa de sua organização, logo todas as imagens, coletáveis, ou coisas grandes e que não são utilizadas 100% do tempo foram armazenadas em dicionários, como as perguntas do quiz.
+- **Tuplas**: As tuplas foram utilizadas para armazenar coisas mais fixas e que não precisariam ser mudadas, como por exemplo as definições de cores em RGB que eram definidas em tuplas e não eram alteradas.
 
 ## Desafios e Erros Durante o Projeto
 

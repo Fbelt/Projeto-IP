@@ -34,10 +34,7 @@ class sistemavida:
     def ativar_invencibilidade_buff(self, duracao_ms):
         tempo_atual = pygame.time.get_ticks()
         fim_proposto = tempo_atual + duracao_ms
-        self.tempo_fim_invencibilidade_buff = max(
-            self.tempo_fim_invencibilidade_buff,
-            fim_proposto
-        )
+        self.tempo_fim_invencibilidade_buff = max(self.tempo_fim_invencibilidade_buff, fim_proposto)
 
 
     def esta_invencivel_por_buff(self):
@@ -100,11 +97,7 @@ class sistemavida:
         if (invencivel_dano or invencivel_buff) and not self.fim_jogo:
             tempo_restante_dano = tempo_invencivel_pos_dano - (tempo_atual - self.tempo_ultimo_dano)
             tempo_restante_buff = self.tempo_fim_invencibilidade_buff - tempo_atual
-
-            tempo_restante_ms = max(
-                tempo_restante_dano if invencivel_dano else 0,
-                tempo_restante_buff if invencivel_buff else 0
-            )
+            tempo_restante_ms = max(tempo_restante_dano if invencivel_dano else 0, tempo_restante_buff if invencivel_buff else 0)
 
             fonte = pygame.font.SysFont(None, 20)
             resto = tempo_restante_ms // 1000 + 1

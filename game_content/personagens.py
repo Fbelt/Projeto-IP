@@ -38,21 +38,11 @@ def _carregar_sprites(cache, caminho_idle, caminho_walk1, altura_alvo):
 
 
 def _carregar_sprites_jogador():
-    return _carregar_sprites(
-        _sprites_jogador,
-        "imagens/guilherme_idle.png",
-        "imagens/guilherme_walk1.png",
-        ALTURA_SPRITE_JOGADOR
-    )
+    return _carregar_sprites(_sprites_jogador, "imagens/guilherme_idle.png", "imagens/guilherme_walk1.png", ALTURA_SPRITE_JOGADOR)
 
 
 def _carregar_sprites_fabio():
-    return _carregar_sprites(
-        _sprites_fabio,
-        "imagens/fabio_idle.png",
-        "imagens/fabio_walk1.png",
-        ALTURA_SPRITE_INIMIGO
-    )
+    return _carregar_sprites(_sprites_fabio, "imagens/fabio_idle.png", "imagens/fabio_walk1.png", ALTURA_SPRITE_INIMIGO)
 
 
 class jogador:
@@ -77,14 +67,11 @@ class jogador:
         if teclas[pygame.K_LEFT] or teclas[pygame.K_a]:
             self.x -= self.velocidade
             self.direcao = -1
-
         if teclas[pygame.K_RIGHT] or teclas[pygame.K_d]:
             self.x += self.velocidade
             self.direcao = 1
-
         if teclas[pygame.K_UP] or teclas[pygame.K_w]:
             self.y -= self.velocidade
-
         if teclas[pygame.K_DOWN] or teclas[pygame.K_s]:
             self.y += self.velocidade
 
@@ -100,11 +87,9 @@ class jogador:
     def desenhar(self, tela):
         if self.movendo:
             agora = pygame.time.get_ticks()
-
             if agora - self.tempo_ultimo_frame > INTERVALO_ANIMACAO:
                 self.frame_andando = 1 - self.frame_andando
                 self.tempo_ultimo_frame = agora
-
             imagem = self.sprites["andando"][self.frame_andando]
         else:
             imagem = self.sprites["idle"]
@@ -112,13 +97,7 @@ class jogador:
         if self.direcao == -1:
             imagem = pygame.transform.flip(imagem, True, False)
 
-        rect = imagem.get_rect(
-            midbottom=(
-                self.x + TAMANHO_VISUAL_JOGADOR // 2,
-                self.y + TAMANHO_VISUAL_JOGADOR
-            )
-        )
-
+        rect = imagem.get_rect(midbottom=(self.x + TAMANHO_VISUAL_JOGADOR // 2, self.y + TAMANHO_VISUAL_JOGADOR))
         tela.blit(imagem, rect)
 
 
@@ -166,11 +145,9 @@ class InimigoPatrulha:
     def desenhar(self, tela):
         if self.movendo:
             agora = pygame.time.get_ticks()
-
             if agora - self.tempo_ultimo_frame > INTERVALO_ANIMACAO:
                 self.frame_andando = 1 - self.frame_andando
                 self.tempo_ultimo_frame = agora
-
             imagem = self.sprites["andando"][self.frame_andando]
         else:
             imagem = self.sprites["idle"]
@@ -178,13 +155,7 @@ class InimigoPatrulha:
         if self.direcao == -1:
             imagem = pygame.transform.flip(imagem, True, False)
 
-        rect = imagem.get_rect(
-            midbottom=(
-                self.x + self.largura // 2,
-                self.y + self.altura
-            )
-        )
-
+        rect = imagem.get_rect(midbottom=(self.x + self.largura // 2, self.y + self.altura))
         tela.blit(imagem, rect)
 
 
@@ -206,16 +177,10 @@ class InimigoVigia:
         self.cor = (40, 80, 180)
 
     def centro(self):
-        return (
-            self.x + self.largura // 2,
-            self.y + self.altura // 2
-        )
+        return (self.x + self.largura // 2, self.y + self.altura // 2)
 
     def centro_personagem(self, personagem):
-        return (
-            personagem.x + personagem.largura // 2,
-            personagem.y + personagem.altura // 2
-        )
+        return (personagem.x + personagem.largura // 2, personagem.y + personagem.altura // 2)
 
     def diferenca_angular(self, angulo_alvo):
         diferenca = (angulo_alvo - self.angulo + 180) % 360 - 180
@@ -259,13 +224,7 @@ class InimigoVigia:
         if abs(diferenca) > ANGULO_VISAO_VIGIA / 2:
             return False
 
-        if self.parede_bloqueia_visao(
-            mapa_atual,
-            centro_x,
-            centro_y,
-            jogador_x,
-            jogador_y
-        ):
+        if self.parede_bloqueia_visao(mapa_atual, centro_x, centro_y, jogador_x, jogador_y):
             return False
 
         return True
@@ -311,13 +270,7 @@ class InimigoVigia:
             dy = jogador_y - centro_y
             self.angulo = math.degrees(math.atan2(dy, dx))
 
-            self.mover_em_direcao(
-                jogador.x,
-                jogador.y,
-                mapa_atual,
-                funcao_colisao_mapa
-            )
-
+            self.mover_em_direcao(jogador.x, jogador.y, mapa_atual, funcao_colisao_mapa)
             return
 
         self.perseguindo = False
@@ -329,12 +282,7 @@ class InimigoVigia:
             dy = self.y_base - self.y
             self.angulo = math.degrees(math.atan2(dy, dx))
 
-            self.mover_em_direcao(
-                self.x_base,
-                self.y_base,
-                mapa_atual,
-                funcao_colisao_mapa
-            )
+            self.mover_em_direcao(self.x_base, self.y_base, mapa_atual, funcao_colisao_mapa)
         else:
             self.x = self.x_base
             self.y = self.y_base
@@ -365,16 +313,7 @@ class InimigoVigia:
         tela.blit(superficie, (0, 0))
 
     def desenhar(self, tela):
-        pygame.draw.rect(
-            tela,
-            self.cor,
-            (
-                self.x,
-                self.y,
-                self.largura,
-                self.altura
-            )
-        )
+        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
 
         centro_x, centro_y = self.centro()
         angulo_rad = math.radians(self.angulo)
@@ -382,10 +321,4 @@ class InimigoVigia:
         ponta_x = centro_x + math.cos(angulo_rad) * 12
         ponta_y = centro_y + math.sin(angulo_rad) * 12
 
-        pygame.draw.line(
-            tela,
-            (255, 255, 255),
-            (centro_x, centro_y),
-            (ponta_x, ponta_y),
-            2
-        )
+        pygame.draw.line(tela, (255, 255, 255), (centro_x, centro_y), (ponta_x, ponta_y), 2)
