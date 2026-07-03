@@ -12,25 +12,37 @@ PORTAS_TRANCADAS = {
     "A": "chave_azul",
     "V": "chave_verde",
     "R": "chave_vermelha",}
+CORES_PORTA_TRANCADA = {
+    "A": (40, 130, 255),
+    "V": (50, 200, 90),
+    "R": (220, 45, 45),
+}
 TEXTURAS = None  # cache global, carregado só na primeira chamada de desenhar_mapa
- 
- 
+
+
 def carregar_textura(nome_arquivo):
     caminho = f"imagens/{nome_arquivo}"
     imagem = pygame.image.load(caminho).convert_alpha()
     return pygame.transform.scale(imagem, (TAMANHO_TILE, TAMANHO_TILE))
- 
- 
+
+
 def carregar_texturas():
     global TEXTURAS
     if TEXTURAS is None:
+        porta_base = carregar_textura("porta.png")
+
         TEXTURAS = {
             "#": carregar_textura("parede.png"),
             ".": carregar_textura("chao.png"),
-            "D": carregar_textura("porta.png"),
+            "D": porta_base,
             "S": carregar_textura("escada_subida.png"),
             "B": carregar_textura("escada_descida.png"),
         }
+
+        for bloco, cor in CORES_PORTA_TRANCADA.items():
+            porta_colorida = porta_base.copy()
+            porta_colorida.fill((*cor, 255), special_flags=pygame.BLEND_RGBA_MULT)
+            TEXTURAS[bloco] = porta_colorida
 
 MAPA_ANDAR_1 = [
     "P.............................#..#SSS....#..#...",
@@ -155,7 +167,7 @@ def desenhar_mapa(tela, mapa):
                 tela.blit(TEXTURAS["."], retangulo)
 
             elif bloco == "D" or bloco == "A" or bloco == "V" or bloco == "R":
-                tela.blit(TEXTURAS["D"], retangulo)
+                tela.blit(TEXTURAS[bloco], retangulo)
 
             elif bloco == "S":
                 tela.blit(TEXTURAS["S"], retangulo)
