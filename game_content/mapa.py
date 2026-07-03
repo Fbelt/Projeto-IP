@@ -117,7 +117,7 @@ MAPA_ANDAR_3 = [
     "...#........#.............#####DD######....#....",
     "...#........#.............#................#....",
     "...#.......................................#....",
-    "...#.............................########..#....",
+    "...#............#................########..#....",
     "####....E........................#......#..#....",
     "............#.............#......#......#..#....",
     "............#.............#####..#......#..#....",
@@ -151,7 +151,7 @@ def desenhar_mapa(tela, mapa):
             if bloco == "#":
                 tela.blit(TEXTURAS["#"], retangulo)
 
-            elif bloco == "." or bloco == "P" or bloco == "p" or bloco == "I" or bloco == "E":
+            elif bloco == "." or bloco == "P" or bloco == "p" or bloco == "E":
                 tela.blit(TEXTURAS["."], retangulo)
 
             elif bloco == "D" or bloco == "A" or bloco == "V" or bloco == "R":
@@ -243,16 +243,6 @@ def encontrar_posicao_spawn_descida(mapa):
                 return x, y
 
     return encontrar_posicao_inicial(mapa)
-
-def encontrar_posicao_inimigo(mapa):
-    for linha_indice, linha in enumerate(mapa):
-        for coluna_indice, bloco in enumerate(linha):
-            if bloco == "I":
-                x = coluna_indice * TAMANHO_TILE
-                y = linha_indice * TAMANHO_TILE
-                return x, y
-
-    return 400, 400 
 
 def trocar_bloco_do_mapa(mapa, linha, coluna, novo_bloco):
     novo_mapa = [list(linha_texto) for linha_texto in mapa]
