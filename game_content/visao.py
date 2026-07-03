@@ -200,8 +200,11 @@ def revelar_area_portas_desbloqueadas(camada_escura, mapa, inventario, animacoes
                 RAIO_REVELACAO_PORTA
             )
 
-def aplicar_visao(tela, jogador, mapa, tempo_inicio_visao, inventario=None, animacoes_revelacao=None):
+def aplicar_visao(tela, jogador, mapa, tempo_inicio_visao, inventario=None, animacoes_revelacao=None, revelar_tudo=False):
     largura_tela, altura_tela = tela.get_size()
+
+    if revelar_tudo:
+        return
 
     tempo_atual = pygame.time.get_ticks()
     tempo_passado = tempo_atual - tempo_inicio_visao

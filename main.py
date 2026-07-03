@@ -14,7 +14,7 @@ from game_content.mapa import (
     encontrar_posicoes_patrulhas
 )
 
-from game_content.sistema_vida import sistemavida
+from game_content.sistema_vida import sistemavida, vidas_maximas
 from game_content import coletaveis as coletaveis_modulo
 from game_content import inventario as inventario_modulo
 from game_content.fernanda import BossFernanda
@@ -74,6 +74,16 @@ COOLDOWN_ESCADA = 500
 tempo_inicio_visao = 0
 animacoes_revelacao_portas = []
 jogo_ganho = False
+
+# habilidade do ChatGPT: revela o mapa todo por alguns segundos
+tempo_ultimo_uso_habilidade_gpt = -coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
+tempo_fim_habilidade_gpt = 0
+
+# habilidade do Claude: recupera 1 vida, uso único
+habilidade_claude_usada = False
+
+# habilidade do Gemini: invencibilidade temporária
+tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
 
 estado_jogo = "normal"
 
@@ -138,6 +148,10 @@ while rodando:
                 animacoes_revelacao_portas = []
                 estado_jogo = "normal"
                 boss_fernanda = BossFernanda()
+                tempo_ultimo_uso_habilidade_gpt = -coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
+                tempo_fim_habilidade_gpt = 0
+                habilidade_claude_usada = False
+                tempo_ultimo_uso_habilidade_gemini = -coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
 
         # --- estado: jogador ganhou ---
         elif jogo_ganho:
@@ -221,6 +235,28 @@ while rodando:
                     if not boss_fernanda.dialogo_inicial_mostrado:
                         estado_jogo = "dialogo_fernanda"
 
+                for evento in eventos:
+                    if evento.type == pygame.KEYDOWN and evento.key in (pygame.K_1, pygame.K_KP1):
+                        if inventario.tem_item("logo_claude") and not habilidade_claude_usada and sistema_vida.vidas < vidas_maximas:
+                            sistema_vida.ganhar_vida()
+                            habilidade_claude_usada = True
+
+                    if evento.type == pygame.KEYDOWN and evento.key in (pygame.K_2, pygame.K_KP2):
+                        agora = pygame.time.get_ticks()
+                        cooldown_liberado = agora - tempo_ultimo_uso_habilidade_gpt >= coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
+
+                        if inventario.tem_item("logo_gpt") and cooldown_liberado:
+                            tempo_ultimo_uso_habilidade_gpt = agora
+                            tempo_fim_habilidade_gpt = agora + coletaveis_modulo.DURACAO_HABILIDADE_GPT
+
+                    if evento.type == pygame.KEYDOWN and evento.key in (pygame.K_3, pygame.K_KP3):
+                        agora = pygame.time.get_ticks()
+                        cooldown_liberado_gemini = agora - tempo_ultimo_uso_habilidade_gemini >= coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+
+                        if inventario.tem_item("logo_gemini") and cooldown_liberado_gemini:
+                            tempo_ultimo_uso_habilidade_gemini = agora
+                            sistema_vida.ativar_invencibilidade_buff(coletaveis_modulo.DURACAO_HABILIDADE_GEMINI)
+
                 for patrulha in patrulhas_atuais:
                     patrulha.mover(mapa_atual, jogador_colide_com_mapa)
 
@@ -282,7 +318,8 @@ while rodando:
                 mapa_atual,
                 tempo_inicio_visao,
                 inventario,
-                animacoes_revelacao_portas
+                animacoes_revelacao_portas,
+                revelar_tudo=pygame.time.get_ticks() < tempo_fim_habilidade_gpt
             )
             if estado_jogo == "dialogo_fernanda":
                 boss_fernanda.desenhar_dialogo(tela)
@@ -307,7 +344,18 @@ while rodando:
                     if animacao is not None:
                         animacoes_revelacao_portas.append(animacao)
 
-            inventario_modulo.desenhar_hud(tela, inventario)
+            progresso_recarga_gpt = min(
+                1.0,
+                (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gpt) / coletaveis_modulo.COOLDOWN_HABILIDADE_GPT
+            )
+            progresso_recarga_gemini = min(
+                1.0,
+                (pygame.time.get_ticks() - tempo_ultimo_uso_habilidade_gemini) / coletaveis_modulo.COOLDOWN_HABILIDADE_GEMINI
+            )
+            inventario_modulo.desenhar_hud(tela, inventario, {
+                "logo_gpt": progresso_recarga_gpt,
+                "logo_gemini": progresso_recarga_gemini,
+            })
 
             pygame.display.flip()
 
