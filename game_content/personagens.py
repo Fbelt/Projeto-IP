@@ -18,6 +18,7 @@ COR_CAMPO_VISAO_VIGIA = (30, 120, 255, 70)
 
 _sprites_jogador = {}
 _sprites_fabio = {}
+_sprites_vigia = {}
 
 
 def _carregar_sprites(cache, caminho_idle, caminho_walk1, altura_alvo):
@@ -44,6 +45,31 @@ def _carregar_sprites_jogador():
 def _carregar_sprites_fabio():
     return _carregar_sprites(_sprites_fabio, "imagens/fabio_idle.png", "imagens/fabio_walk1.png", ALTURA_SPRITE_INIMIGO)
 
+def _carregar_sprites_vigia():
+    if not _sprites_vigia:
+        caminhos = {
+            "direita": "imagens/vigia direita.png",
+            "esquerda": "imagens/vigia esquerda.png",
+            "frente": "imagens/vigia frente.png",
+            "costas": "imagens/vigia costas.png",
+            "andando": "imagens/vigia andando.png",
+        }
+
+        for chave, caminho in caminhos.items():
+            imagem = pygame.image.load(caminho).convert_alpha()
+
+            largura_alvo = int(
+                imagem.get_width() * (ALTURA_SPRITE_INIMIGO / imagem.get_height())
+            )
+
+            imagem = pygame.transform.smoothscale(
+                imagem,
+                (largura_alvo, ALTURA_SPRITE_INIMIGO)
+            )
+
+            _sprites_vigia[chave] = imagem
+
+    return _sprites_vigia
 
 class jogador:
     def __init__(self, x, y):
@@ -174,17 +200,44 @@ class InimigoVigia:
         self.perseguindo = False
         self.movendo = False
 
-        self.cor = (40, 80, 180)
+        self.sprites = _carregar_sprites_vigia()
 
     def centro(self):
-        return (self.x + self.largura // 2, self.y + self.altura // 2)
+        return (
+            self.x + self.largura // 2,
+            self.y + self.altura // 2
+        )
 
     def centro_personagem(self, personagem):
-        return (personagem.x + personagem.largura // 2, personagem.y + personagem.altura // 2)
+        return (
+            personagem.x + personagem.largura // 2,
+            personagem.y + personagem.altura // 2
+        )
 
     def diferenca_angular(self, angulo_alvo):
         diferenca = (angulo_alvo - self.angulo + 180) % 360 - 180
         return diferenca
+
+    def obter_direcao_visual(self):
+        angulo = self.angulo % 360
+
+        if angulo >= 315 or angulo < 45:
+            return "direita"
+
+        if 45 <= angulo < 135:
+            return "frente"
+
+        if 135 <= angulo < 225:
+            return "esquerda"
+
+        return "costas"
+
+    def obter_sprite_atual(self):
+        if self.movendo:
+            return self.sprites["andando"]
+
+        direcao_visual = self.obter_direcao_visual()
+        return self.sprites[direcao_visual]
 
     def parede_bloqueia_visao(self, mapa_atual, x1, y1, x2, y2):
         distancia = math.hypot(x2 - x1, y2 - y1)
@@ -224,7 +277,13 @@ class InimigoVigia:
         if abs(diferenca) > ANGULO_VISAO_VIGIA / 2:
             return False
 
-        if self.parede_bloqueia_visao(mapa_atual, centro_x, centro_y, jogador_x, jogador_y):
+        if self.parede_bloqueia_visao(
+            mapa_atual,
+            centro_x,
+            centro_y,
+            jogador_x,
+            jogador_y
+        ):
             return False
 
         return True
@@ -270,7 +329,13 @@ class InimigoVigia:
             dy = jogador_y - centro_y
             self.angulo = math.degrees(math.atan2(dy, dx))
 
-            self.mover_em_direcao(jogador.x, jogador.y, mapa_atual, funcao_colisao_mapa)
+            self.mover_em_direcao(
+                jogador.x,
+                jogador.y,
+                mapa_atual,
+                funcao_colisao_mapa
+            )
+
             return
 
         self.perseguindo = False
@@ -282,7 +347,12 @@ class InimigoVigia:
             dy = self.y_base - self.y
             self.angulo = math.degrees(math.atan2(dy, dx))
 
-            self.mover_em_direcao(self.x_base, self.y_base, mapa_atual, funcao_colisao_mapa)
+            self.mover_em_direcao(
+                self.x_base,
+                self.y_base,
+                mapa_atual,
+                funcao_colisao_mapa
+            )
         else:
             self.x = self.x_base
             self.y = self.y_base
@@ -313,12 +383,13 @@ class InimigoVigia:
         tela.blit(superficie, (0, 0))
 
     def desenhar(self, tela):
-        pygame.draw.rect(tela, self.cor, (self.x, self.y, self.largura, self.altura))
+        imagem = self.obter_sprite_atual()
 
-        centro_x, centro_y = self.centro()
-        angulo_rad = math.radians(self.angulo)
+        rect = imagem.get_rect(
+            midbottom=(
+                self.x + self.largura // 2,
+                self.y + self.altura
+            )
+        )
 
-        ponta_x = centro_x + math.cos(angulo_rad) * 12
-        ponta_y = centro_y + math.sin(angulo_rad) * 12
-
-        pygame.draw.line(tela, (255, 255, 255), (centro_x, centro_y), (ponta_x, ponta_y), 2)
+        tela.blit(imagem, rect)
